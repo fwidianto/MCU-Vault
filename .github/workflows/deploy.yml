@@ -1,0 +1,35 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        python -c "from app import create_app; app = create_app(); print('App initialized successfully')"
+    
+    - name: Deploy to Render
+      if: vars.RENDER_DEPLOY_HOOK_URL != ''
+      run: |
+        curl -s -X POST ${{ vars.RENDER_DEPLOY_HOOK_URL }}
+      shell: bash
+      env:
+        RENDER_DEPLOY_HOOK_URL: ${{ vars.RENDER_DEPLOY_HOOK_URL }}

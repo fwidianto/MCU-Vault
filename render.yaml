@@ -1,0 +1,17 @@
+{
+  "name": "mcu-vault",
+  "runtime": "python",
+  "buildCommand": "pip install -r requirements.txt",
+  "startCommand": "gunicorn run:app --host 0.0.0.0 --port $PORT",
+  "healthCheckPath": "/",
+  "envVars": [
+    {
+      "key": "FLASK_ENV",
+      "value": "production"
+    },
+    {
+      "key": "SECRET_KEY",
+      "generateValue": true
+    }
+  ]
+}

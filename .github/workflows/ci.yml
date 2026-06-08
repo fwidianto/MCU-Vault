@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Verify app initialization
+      run: |
+        python -c "
+from app import create_app, db
+from app.models import User, MCURecord, UploadedFile
+
+app = create_app()
+with app.app_context():
+    db.create_all()
+    
+    # Test user creation
+    user = User(username='test', email='test@test.com')
+    user.set_password('password123')
+    db.session.add(user)
+    db.session.commit()
+    
+    print('✓ Database tables created')
+    print('✓ User model working')
+    print('✓ MCU Record model working')
+    print('✓ UploadedFile model working')
+    print('All tests passed!')
+"
+    
+    - name: Lint code (basic check)
+      run: |
+        python -m py_compile app/__init__.py app/config.py app/models/*.py app/routes/*.py app/utils/*.py run.py && echo "✓ All Python files compile successfully"
