@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MCU Vault{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card stat-primary">
+        <div class="stat-icon">
+            <i class="bi bi-file-earmark-medical"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ total_records }}</span>
+            <span class="stat-label">Total Records</span>
+        </div>
+    </div>
+    
+    <div class="stat-card stat-success">
+        <div class="stat-icon">
+            <i class="bi bi-paperclip"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ total_files }}</span>
+            <span class="stat-label">Uploaded Files</span>
+        </div>
+    </div>
+    
+    <div class="stat-card stat-info">
+        <div class="stat-icon">
+            <i class="bi bi-calendar-month"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ records_this_month }}</span>
+            <span class="stat-label">This Month</span>
+        </div>
+    </div>
+    
+    <div class="stat-card stat-warning">
+        <div class="stat-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-value">{{ records_last_week }}</span>
+            <span class="stat-label">Last 7 Days</span>
+        </div>
+    </div>
+</div>
+
+<!-- Status Summary & Quick Actions -->
+<div class="dashboard-grid">
+    <!-- Status Summary -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h5><i class="bi bi-pie-chart"></i> Status Overview</h5>
+        </div>
+        <div class="card-body">
+            <div class="status-list">
+                <div class="status-item">
+                    <span class="status-badge bg-warning">
+                        <i class="bi bi-hourglass-split"></i> Pending
+                    </span>
+                    <span class="status-count">{{ pending_count }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-badge bg-success">
+                        <i class="bi bi-check-circle"></i> Cleared
+                    </span>
+                    <span class="status-count">{{ cleared_count }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-badge bg-danger">
+                        <i class="bi bi-x-circle"></i> Not Cleared
+                    </span>
+                    <span class="status-count">{{ not_cleared_count }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-badge bg-info">
+                        <i class="bi bi-exclamation-circle"></i> Follow Up
+                    </span>
+                    <span class="status-count">{{ follow_up_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="{{ url_for('records.create') }}" class="quick-action-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>New Record</span>
+                </a>
+                <a href="{{ url_for('records.list') }}" class="quick-action-btn">
+                    <i class="bi bi-search"></i>
+                    <span>Search Records</span>
+                </a>
+                <a href="{{ url_for('dashboard.index') }}" class="quick-action-btn" onclick="location.reload(); return false;">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span>Refresh Data</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Records -->
+<div class="dashboard-card recent-records-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="bi bi-clock-history"></i> Recent Records</h5>
+        <a href="{{ url_for('records.list') }}" class="btn btn-sm btn-outline-primary">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="card-body">
+        {% if recent_records %}
+        <div class="table-responsive">
+            <table class="table table-hover recent-table">
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Company</th>
+                        <th>MCU Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in recent_records %}
+                    <tr>
+                        <td>
+                            <strong>{{ record.patient_name }}</strong>
+                        </td>
+                        <td>{{ record.company or '-' }}</td>
+                        <td>{{ record.mcu_date.strftime('%B %d, %Y') if record.mcu_date else '-' }}</td>
+                        <td>
+                            <span class="badge {{ record.status_badge_class }}">
+                                {{ record.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('records.detail', record_id=record.id) }}" class="btn btn-sm btn-outline-info" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h6>No Records Yet</h6>
+            <p>Start by creating your first MCU record.</p>
+            <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create First Record
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User Info Card -->
+<div class="user-stats-card">
+    <div class="card-body">
+        <div class="user-stats-content">
+            <div class="user-avatar-large">
+                {{ current_user.username[0]|upper }}
+            </div>
+            <div class="user-stats-info">
+                <h5>{{ current_user.username }}</h5>
+                <p class="text-muted">{{ current_user.email }}</p>
+                <small class="text-muted">Member since {{ member_since.strftime('%B %Y') if member_since else 'N/A' }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Register - MCU Vault{% endblock %}
+
+{% block auth_content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2><i class="bi bi-person-plus"></i></h2>
+        <h3>Create Account</h3>
+        <p>Register to start managing MCU records</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
+        <div class="form-group">
+            <label for="username" class="form-label">
+                <i class="bi bi-person"></i> Username
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="username" 
+                   name="username" 
+                   placeholder="Choose a username"
+                   value="{{ username or '' }}"
+                   minlength="3"
+                   maxlength="80"
+                   required 
+                   autofocus>
+            <div class="form-hint">At least 3 characters</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="email" class="form-label">
+                <i class="bi bi-envelope"></i> Email Address
+            </label>
+            <input type="email" 
+                   class="form-control" 
+                   id="email" 
+                   name="email" 
+                   placeholder="Enter your email address"
+                   value="{{ email or '' }}"
+                   required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password" class="form-label">
+                <i class="bi bi-lock"></i> Password
+            </label>
+            <div class="password-input-wrapper">
+                <input type="password" 
+                       class="form-control" 
+                       id="password" 
+                       name="password" 
+                       placeholder="Create a password"
+                       minlength="6"
+                       required>
+                <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            <div class="form-hint">At least 6 characters</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="confirm_password" class="form-label">
+                <i class="bi bi-lock-fill"></i> Confirm Password
+            </label>
+            <div class="password-input-wrapper">
+                <input type="password" 
+                       class="form-control" 
+                       id="confirm_password" 
+                       name="confirm_password" 
+                       placeholder="Confirm your password"
+                       minlength="6"
+                       required>
+                <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-auth">
+            <i class="bi bi-person-plus"></i> Create Account
+        </button>
+    </form>
+    
+    <div class="auth-footer">
+        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    </div>
+</div>
+{% endblock %}

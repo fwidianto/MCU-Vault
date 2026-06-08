@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Login - MCU Vault{% endblock %}
+
+{% block auth_content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2><i class="bi bi-person-circle"></i></h2>
+        <h3>Welcome Back</h3>
+        <p>Sign in to access your MCU records</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+        <div class="form-group">
+            <label for="username" class="form-label">
+                <i class="bi bi-person"></i> Username or Email
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="username" 
+                   name="username" 
+                   placeholder="Enter your username or email"
+                   value="{{ request.form.username or '' }}"
+                   required 
+                   autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label for="password" class="form-label">
+                <i class="bi bi-lock"></i> Password
+            </label>
+            <div class="password-input-wrapper">
+                <input type="password" 
+                       class="form-control" 
+                       id="password" 
+                       name="password" 
+                       placeholder="Enter your password"
+                       required>
+                <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="form-check mb-4">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+            <label class="form-check-label" for="remember">Remember me</label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-auth">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In
+        </button>
+    </form>
+    
+    <div class="auth-footer">
+        <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a></p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Files - MCU Vault{% endblock %}
+{% block page_title %}Upload Files{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="{{ url_for('records.list') }}">Records</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="{{ url_for('records.detail', record_id=record.id) }}">{{ record.patient_name }}</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Upload Files</span>
+    </nav>
+    
+    <!-- Record Info Card -->
+    <div class="record-info-card">
+        <div class="record-info-content">
+            <i class="bi bi-file-earmark-medical"></i>
+            <div>
+                <strong>{{ record.patient_name }}</strong>
+                <span>{{ record.company or 'No Company' }} • {{ record.mcu_date.strftime('%B %d, %Y') if record.mcu_date else '' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Area -->
+    <div class="upload-card">
+        <div class="upload-card-header">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <h4>Upload Files</h4>
+        </div>
+        
+        <form method="POST" action="{{ url_for('upload.upload_file', record_id=record.id) }}" 
+              enctype="multipart/form-data" 
+              class="upload-form"
+              id="uploadForm">
+            
+            <div class="drop-zone" id="dropZone">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+                <h5>Drag and drop files here</h5>
+                <p>or</p>
+                <label for="fileInput" class="btn btn-outline-primary">
+                    <i class="bi bi-folder2-open"></i> Browse Files
+                </label>
+                <input type="file" 
+                       id="fileInput" 
+                       name="files" 
+                       multiple 
+                       accept=".pdf,.jpg,.jpeg,.png"
+                       hidden>
+            </div>
+            
+            <div class="file-list" id="fileList">
+                <!-- Selected files will be shown here -->
+            </div>
+            
+            <div class="upload-info">
+                <p><i class="bi bi-info-circle"></i> Allowed file types: PDF, JPG, JPEG, PNG</p>
+                <p><i class="bi bi-hdd"></i> Maximum file size: 16MB per file</p>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('records.detail', record_id=record.id) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                    <i class="bi bi-cloud-upload"></i> Upload Files
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Existing Files -->
+    {% if files %}
+    <div class="existing-files-card">
+        <div class="existing-files-header">
+            <i class="bi bi-paperclip"></i>
+            <h5>Already Uploaded ({{ files|length }})</h5>
+        </div>
+        
+        <div class="files-grid">
+            {% for file in files %}
+            <div class="file-card">
+                <div class="file-icon">
+                    {% if file.is_pdf %}
+                    <i class="bi bi-file-pdf text-danger"></i>
+                    {% elif file.is_image %}
+                    <i class="bi bi-file-image text-primary"></i>
+                    {% else %}
+                    <i class="bi bi-file-earmark text-secondary"></i>
+                    {% endif %}
+                </div>
+                <div class="file-info">
+                    <span class="file-name" title="{{ file.original_filename }}">{{ file.original_filename }}</span>
+                    <span class="file-meta">
+                        {{ file.file_size_formatted }} • {{ file.uploaded_at.strftime('%b %d, %Y') if file.uploaded_at else '' }}
+                    </span>
+                </div>
+                <div class="file-actions">
+                    <a href="{{ url_for('upload.serve_file', filename=file.filename) }}" target="_blank" class="file-action-btn" title="View">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('upload.download_file', filename=file.filename) }}" class="file-action-btn" title="Download">
+                        <i class="bi bi-download"></i>
+                    </a>
+                    <button onclick="confirmDeleteFile({{ file.id }}, '{{ file.original_filename }}')" class="file-action-btn text-danger" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete File Modal -->
+<div class="modal fade" id="deleteFileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Delete File
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteFileName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteFileForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete File
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+const uploadBtn = document.getElementById('uploadBtn');
+const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+const maxSize = 16 * 1024 * 1024; // 16MB
+
+// Click to browse
+dropZone.addEventListener('click', () => fileInput.click());
+
+// File input change
+fileInput.addEventListener('change', handleFiles);
+
+// Drag and drop
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    
+    const files = e.dataTransfer.files;
+    handleFiles({ target: { files } });
+});
+
+function handleFiles(e) {
+    const files = Array.from(e.target.files);
+    fileList.innerHTML = '';
+    let validCount = 0;
+    
+    files.forEach((file, index) => {
+        const isValid = allowedTypes.includes(file.type) && file.size <= maxSize;
+        const isImage = file.type.startsWith('image/');
+        
+        if (isValid) validCount++;
+        
+        const fileItem = document.createElement('div');
+        fileItem.className = `file-item ${isValid ? 'valid' : 'invalid'}`;
+        fileItem.innerHTML = `
+            <div class="file-item-icon">
+                ${isImage ? '<i class="bi bi-file-image text-primary"></i>' : '<i class="bi bi-file-pdf text-danger"></i>'}
+            </div>
+            <div class="file-item-info">
+                <span class="file-item-name">${file.name}</span>
+                <span class="file-item-size">${formatSize(file.size)}</span>
+                ${!isValid ? `<span class="file-item-error">${getErrorMessage(file)}</span>` : ''}
+            </div>
+            <div class="file-item-status">
+                ${isValid ? '<i class="bi bi-check-circle text-success"></i>' : '<i class="bi bi-x-circle text-danger"></i>'}
+            </div>
+        `;
+        fileList.appendChild(fileItem);
+    });
+    
+    uploadBtn.disabled = validCount === 0;
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function getErrorMessage(file) {
+    if (!allowedTypes.includes(file.type)) return 'Unsupported file type';
+    if (file.size > maxSize) return 'File exceeds 16MB limit';
+    return 'Invalid file';
+}
+
+function confirmDeleteFile(fileId, fileName) {
+    document.getElementById('deleteFileName').textContent = fileName;
+    document.getElementById('deleteFileForm').action = '/records/{{ record.id }}/files/' + fileId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteFileModal')).show();
+}
+</script>
+{% endblock %}
