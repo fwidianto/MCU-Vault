@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Records - MCU Vault{% endblock %}
+{% block page_title %}Compare Records{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Compare page styles */
+    .compare-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .compare-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .compare-header h5 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .compare-header i {
+        color: var(--primary-color);
+    }
+    
+    .record-selector {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .selector-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .selector-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+    
+    .selector-group select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-gray);
+        border-radius: var(--radius-md);
+        font-size: 0.9375rem;
+    }
+    
+    .compare-btn {
+        padding: 0.5rem 1.5rem;
+        background: var(--primary-color);
+        color: var(--white);
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .compare-btn:hover {
+        background: var(--primary-dark);
+    }
+    
+    .export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--success-color);
+        color: var(--white);
+        border: none;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+    }
+    
+    .export-btn:hover {
+        background: #157347;
+        color: var(--white);
+    }
+    
+    .comparison-table-container {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .comparison-header {
+        display: grid;
+        grid-template-columns: 200px 1fr 1fr 150px 100px;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: var(--light-gray);
+        border-bottom: 2px solid var(--border-gray);
+        font-weight: 600;
+    }
+    
+    .comparison-row {
+        display: grid;
+        grid-template-columns: 200px 1fr 1fr 150px 100px;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-gray);
+        align-items: center;
+    }
+    
+    .comparison-row:last-child {
+        border-bottom: none;
+    }
+    
+    .comparison-row:hover {
+        background: var(--light-gray);
+    }
+    
+    .comparison-metric-name {
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .comparison-metric-name i {
+        color: var(--primary-color);
+    }
+    
+    .comparison-value {
+        font-weight: 600;
+    }
+    
+    .comparison-diff {
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .comparison-trend {
+        text-align: center;
+    }
+    
+    /* Trend indicators */
+    .trend-improvement {
+        color: var(--success-color);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .trend-worsening {
+        color: var(--danger-color);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .trend-no-change {
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .trend-unknown {
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    /* Value difference colors */
+    .diff-positive {
+        color: var(--danger-color);
+    }
+    
+    .diff-negative {
+        color: var(--success-color);
+    }
+    
+    .diff-neutral {
+        color: var(--text-muted);
+    }
+    
+    /* Info cards */
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .info-card h6 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-card .value {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .info-card .subtext {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    /* Empty state */
+    .compare-empty {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .compare-empty i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--border-gray);
+    }
+    
+    .compare-empty h5 {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .comparison-header,
+        .comparison-row {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .comparison-header > *,
+        .comparison-row > * {
+            padding: 0.25rem 0;
+        }
+        
+        .comparison-header {
+            display: none;
+        }
+        
+        .comparison-row {
+            border-bottom: 1px solid var(--border-gray);
+            padding: 1rem;
+        }
+        
+        .comparison-metric-name {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comparison-value::before {
+            content: attr(data-label) ": ";
+            font-weight: normal;
+            color: var(--text-muted);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="compare-container">
+    <!-- Header with selectors -->
+    <div class="compare-header">
+        <h5>
+            <i class="bi bi-arrow-left-right"></i>
+            MCU Record Comparison
+        </h5>
+        
+        <form method="GET" action="{{ url_for('analytics.compare') }}" class="record-selector">
+            <div class="selector-group">
+                <label for="record_a">Record A (Earlier/First)</label>
+                <select name="record_a" id="record_a" required>
+                    <option value="">Select Record A</option>
+                    {% for record in records %}
+                    <option value="{{ record.id }}" 
+                            {% if record_a and record_a.id == record.id %}selected{% endif %}>
+                        {{ record.mcu_date.strftime('%Y-%m-%d') if record.mcu_date else 'N/A' }} - 
+                        {{ record.patient_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="selector-group">
+                <label for="record_b">Record B (Later/Second)</label>
+                <select name="record_b" id="record_b" required>
+                    <option value="">Select Record B</option>
+                    {% for record in records %}
+                    <option value="{{ record.id }}"
+                            {% if record_b and record_b.id == record.id %}selected{% endif %}>
+                        {{ record.mcu_date.strftime('%Y-%m-%d') if record.mcu_date else 'N/A' }} - 
+                        {{ record.patient_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="compare-btn">
+                <i class="bi bi-search"></i> Compare
+            </button>
+            
+            {% if comparison_data %}
+            <a href="{{ url_for('analytics.export_comparison', record_a=record_a.id, record_b=record_b.id) }}" 
+               class="export-btn">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if records|length < 2 %}
+    <div class="compare-empty">
+        <i class="bi bi-clipboard-data"></i>
+        <h5>Not Enough Records to Compare</h5>
+        <p>You need at least 2 MCU records with health metrics to compare them.</p>
+        <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Record
+        </a>
+    </div>
+    {% elif not comparison_data and record_a and record_b %}
+    <div class="compare-empty">
+        <i class="bi bi-exclamation-triangle"></i>
+        <h5>Cannot Compare Selected Records</h5>
+        <p>One or both selected records do not have health metrics data.</p>
+    </div>
+    {% elif comparison_data %}
+    <!-- Info Cards -->
+    <div class="info-cards">
+        <div class="info-card">
+            <h6>Record A</h6>
+            <div class="value">{{ comparison_data.record_a_info.patient_name }}</div>
+            <div class="subtext">{{ comparison_data.record_a_info.date }}</div>
+        </div>
+        <div class="info-card">
+            <h6>Record B</h6>
+            <div class="value">{{ comparison_data.record_b_info.patient_name }}</div>
+            <div class="subtext">{{ comparison_data.record_b_info.date }}</div>
+        </div>
+        {% if comparison_data.days_between %}
+        <div class="info-card">
+            <h6>Time Between Records</h6>
+            <div class="value">{{ comparison_data.days_between }} days</div>
+            <div class="subtext">
+                {{ (comparison_data.days_between / 30)|round(1) }} months
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Comparison Table -->
+    <div class="comparison-table-container">
+        <div class="comparison-header">
+            <div>Metric</div>
+            <div>Record A</div>
+            <div>Record B</div>
+            <div>Difference</div>
+            <div>Trend</div>
+        </div>
+        
+        {% for metric in comparison_data.metrics %}
+        <div class="comparison-row">
+            <div class="comparison-metric-name">
+                <i class="bi bi-activity"></i>
+                {{ metric.label }}
+                {% if metric.unit %} ({{ metric.unit }}){% endif %}
+            </div>
+            
+            <div class="comparison-value" data-label="Record A">
+                {{ metric.formatted_a }}
+            </div>
+            
+            <div class="comparison-value" data-label="Record B">
+                {{ metric.formatted_b }}
+            </div>
+            
+            <div class="comparison-diff">
+                {% if metric.has_both_values and metric.difference is not none %}
+                <span class="{% if metric.difference > 0 %}diff-positive{% elif metric.difference < 0 %}diff-negative{% else %}diff-neutral{% endif %}">
+                    {{ metric.formatted_diff }}
+                </span>
+                {% else %}
+                <span class="text-muted">N/A</span>
+                {% endif %}
+            </div>
+            
+            <div class="comparison-trend">
+                {% if metric.trend == 'improvement' %}
+                <span class="trend-improvement">
+                    <i class="bi bi-arrow-down-circle"></i> Improvement
+                </span>
+                {% elif metric.trend == 'worsening' %}
+                <span class="trend-worsening">
+                    <i class="bi bi-arrow-up-circle"></i> Worsening
+                </span>
+                {% elif metric.trend == 'no_change' %}
+                <span class="trend-no-change">
+                    <i class="bi bi-dash-circle"></i> No Change
+                </span>
+                {% else %}
+                <span class="trend-unknown">
+                    <i class="bi bi-question-circle"></i> N/A
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Legend -->
+    <div class="mt-3 text-muted small">
+        <p><strong>Legend:</strong></p>
+        <ul>
+            <li><strong>Improvement</strong>: Values have moved in a generally healthier direction</li>
+            <li><strong>Worsening</strong>: Values have moved in a less healthy direction</li>
+            <li><strong>No Change</strong>: Values are essentially the same</li>
+        </ul>
+        <p class="mb-0">
+            <strong>Note:</strong> For most metrics, lower values indicate improvement. 
+            For HDL (good cholesterol), higher values indicate improvement.
+        </p>
+    </div>
+    {% else %}
+    <div class="compare-empty">
+        <i class="bi bi-bar-chart"></i>
+        <h5>Select Records to Compare</h5>
+        <p>Choose two MCU records above to see a detailed health comparison.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

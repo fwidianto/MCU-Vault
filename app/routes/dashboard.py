@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from app import db
 from app.models.mcu_record import MCURecord, UploadedFile
 from app.models.health_metrics import HealthMetrics
+from app.utils.health_classification import HealthClassifier, classify_all_metrics
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -71,6 +72,22 @@ def index():
     # Records without health metrics
     records_without_metrics = total_records - records_with_metrics
     
+    # Phase 2B: Get latest health snapshot for dashboard cards
+    latest_record = MCURecord.query.filter_by(
+        user_id=current_user.id
+    ).join(HealthMetrics).order_by(
+        MCURecord.mcu_date.desc()
+    ).first()
+    
+    latest_metrics = None
+    latest_classifications = {}
+    latest_mcu_date = None
+    
+    if latest_record and latest_record.health_metrics:
+        latest_metrics = latest_record.health_metrics
+        latest_classifications = classify_all_metrics(latest_metrics)
+        latest_mcu_date = latest_record.mcu_date
+    
     context = {
         'total_records': total_records,
         'total_files': total_files,
@@ -85,7 +102,12 @@ def index():
         'follow_up_count': status_dict.get('needs-follow-up', 0),
         # Health metrics statistics
         'records_with_metrics': records_with_metrics,
-        'records_without_metrics': records_without_metrics
+        'records_without_metrics': records_without_metrics,
+        # Phase 2B: Latest health snapshot
+        'latest_record': latest_record,
+        'latest_metrics': latest_metrics,
+        'latest_classifications': latest_classifications,
+        'latest_mcu_date': latest_mcu_date
     }
     
     return render_template('dashboard.html', **context)

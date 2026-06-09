@@ -47,6 +47,93 @@
     </div>
 </div>
 
+<!-- Phase 2B: Health Status Cards -->
+{% if latest_metrics and latest_classifications %}
+<div class="health-status-section">
+    <div class="section-header">
+        <h5><i class="bi bi-heart-pulse"></i> Latest Health Status</h5>
+        <a href="{{ url_for('analytics.health_dashboard') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-graph-up"></i> View Analytics
+        </a>
+    </div>
+    <div class="health-cards-grid">
+        <!-- BMI Status -->
+        <div class="health-status-card">
+            <div class="health-status-icon">
+                <i class="bi bi-person-bounding-box"></i>
+            </div>
+            <div class="health-status-content">
+                <span class="health-status-label">BMI</span>
+                <span class="health-status-value">
+                    {% if latest_metrics.bmi %}{{ latest_metrics.bmi }}{% else %}N/A{% endif %}
+                </span>
+                <span class="health-status-badge {{ latest_classifications.bmi.badge_class }}">
+                    {{ latest_classifications.bmi.status }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Blood Pressure Status -->
+        <div class="health-status-card">
+            <div class="health-status-icon">
+                <i class="bi bi-heart"></i>
+            </div>
+            <div class="health-status-content">
+                <span class="health-status-label">Blood Pressure</span>
+                <span class="health-status-value">
+                    {% if latest_metrics.systolic_bp and latest_metrics.diastolic_bp %}
+                        {{ latest_metrics.systolic_bp }}/{{ latest_metrics.diastolic_bp }}
+                    {% else %}N/A{% endif %}
+                </span>
+                <span class="health-status-badge {{ latest_classifications.blood_pressure.badge_class }}">
+                    {{ latest_classifications.blood_pressure.status }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- HbA1c Status -->
+        <div class="health-status-card">
+            <div class="health-status-icon">
+                <i class="bi bi-droplet"></i>
+            </div>
+            <div class="health-status-content">
+                <span class="health-status-label">HbA1c</span>
+                <span class="health-status-value">
+                    {% if latest_metrics.hba1c %}{{ latest_metrics.hba1c }}%{% else %}N/A{% endif %}
+                </span>
+                <span class="health-status-badge {{ latest_classifications.hba1c.badge_class }}">
+                    {{ latest_classifications.hba1c.status }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- LDL Status -->
+        <div class="health-status-card">
+            <div class="health-status-icon">
+                <i class="bi bi-droplet-half"></i>
+            </div>
+            <div class="health-status-content">
+                <span class="health-status-label">LDL</span>
+                <span class="health-status-value">
+                    {% if latest_metrics.ldl %}{{ latest_metrics.ldl }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="health-status-badge {{ latest_classifications.ldl.badge_class }}">
+                    {{ latest_classifications.ldl.status }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="health-status-footer">
+        <small class="text-muted">
+            Last updated: {{ latest_mcu_date.strftime('%B %d, %Y') if latest_mcu_date else 'N/A' }}
+        </small>
+        <a href="{{ url_for('analytics.compare') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left-right"></i> Compare Records
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Status Summary & Quick Actions -->
 <div class="dashboard-grid">
     <!-- Status Summary -->
@@ -127,6 +214,12 @@
                     <i class="bi bi-search"></i>
                     <span>Search Records</span>
                 </a>
+                {% if records_with_metrics >= 2 %}
+                <a href="{{ url_for('analytics.health_dashboard') }}" class="quick-action-btn">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Health Analytics</span>
+                </a>
+                {% endif %}
                 <a href="{{ url_for('dashboard.index') }}" class="quick-action-btn" onclick="location.reload(); return false;">
                     <i class="bi bi-arrow-clockwise"></i>
                     <span>Refresh Data</span>
