@@ -1,0 +1,815 @@
+{% extends "base.html" %}
+
+{% block title %}Health Analytics - MCU Vault{% endblock %}
+{% block page_title %}Health Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Analytics specific styles */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .snapshot-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .snapshot-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .snapshot-header h5 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .snapshot-header i {
+        color: var(--primary-color);
+    }
+    
+    .snapshot-date {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .status-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .status-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .charts-section {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+    }
+    
+    .charts-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    
+    .charts-section-header h5 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .charts-section-header i {
+        color: var(--primary-color);
+    }
+    
+    .chart-tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .chart-tab {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-gray);
+        border-radius: var(--radius-md);
+        background: var(--white);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-size: 0.875rem;
+    }
+    
+    .chart-tab:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .chart-tab.active {
+        background: var(--primary-color);
+        color: var(--white);
+        border-color: var(--primary-color);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 1rem;
+    }
+    
+    .chart-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+        color: var(--text-muted);
+    }
+    
+    .chart-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--border-gray);
+    }
+    
+    .no-data-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .no-data-message i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--border-gray);
+    }
+    
+    .no-data-message h5 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .quick-stat {
+        background: var(--white);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .quick-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .quick-stat-content {
+        flex: 1;
+    }
+    
+    .quick-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    
+    .quick-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Comparison link button */
+    .compare-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--primary-color);
+        color: var(--white);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: all var(--transition-fast);
+    }
+    
+    .compare-link:hover {
+        background: var(--primary-dark);
+        color: var(--white);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .status-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-tabs {
+            justify-content: center;
+        }
+        
+        .charts-section-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="quick-stats">
+    <div class="quick-stat">
+        <div class="quick-stat-icon stat-primary">
+            <i class="bi bi-clipboard2-pulse"></i>
+        </div>
+        <div class="quick-stat-content">
+            <div class="quick-stat-value">{{ total_with_metrics }}</div>
+            <div class="quick-stat-label">Records with Metrics</div>
+        </div>
+    </div>
+    <div class="quick-stat">
+        <div class="quick-stat-icon stat-info">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <div class="quick-stat-content">
+            <div class="quick-stat-value">
+                {% if latest_mcu_date %}
+                    {{ latest_mcu_date.strftime('%b %d, %Y') }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="quick-stat-label">Latest MCU Date</div>
+        </div>
+    </div>
+    <div class="quick-stat">
+        <div class="quick-stat-icon stat-success">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="quick-stat-content">
+            <div class="quick-stat-value">{{ records_count }}</div>
+            <div class="quick-stat-label">Data Points for Trends</div>
+        </div>
+    </div>
+</div>
+
+{% if latest_metrics and classifications %}
+<!-- Latest Health Snapshot -->
+<div class="analytics-grid">
+    <div class="snapshot-card">
+        <div class="snapshot-header">
+            <h5>
+                <i class="bi bi-heart-pulse"></i>
+                Latest Health Snapshot
+            </h5>
+            <div class="snapshot-date">
+                {% if latest_record %}
+                    {{ latest_record.mcu_date.strftime('%B %d, %Y') }}
+                    • {{ latest_record.patient_name }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-label">BMI</span>
+                <span class="status-value">
+                    {% if latest_metrics.bmi %}{{ latest_metrics.bmi }}{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.bmi.badge_class }}">
+                    {{ classifications.bmi.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">Blood Pressure</span>
+                <span class="status-value">
+                    {% if latest_metrics.systolic_bp and latest_metrics.diastolic_bp %}
+                        {{ latest_metrics.systolic_bp }}/{{ latest_metrics.diastolic_bp }}
+                    {% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.blood_pressure.badge_class }}">
+                    {{ classifications.blood_pressure.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">HbA1c</span>
+                <span class="status-value">
+                    {% if latest_metrics.hba1c %}{{ latest_metrics.hba1c }}%{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.hba1c.badge_class }}">
+                    {{ classifications.hba1c.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">LDL</span>
+                <span class="status-value">
+                    {% if latest_metrics.ldl %}{{ latest_metrics.ldl }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.ldl.badge_class }}">
+                    {{ classifications.ldl.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">HDL</span>
+                <span class="status-value">
+                    {% if latest_metrics.hdl %}{{ latest_metrics.hdl }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.hdl.badge_class }}">
+                    {{ classifications.hdl.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">Weight</span>
+                <span class="status-value">
+                    {% if latest_metrics.weight_kg %}{{ latest_metrics.weight_kg }} kg{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge bg-secondary">Reference</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Metrics Card -->
+    <div class="snapshot-card">
+        <div class="snapshot-header">
+            <h5>
+                <i class="bi bi-droplet"></i>
+                Additional Metrics
+            </h5>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-label">Fasting Glucose</span>
+                <span class="status-value">
+                    {% if latest_metrics.fasting_glucose %}{{ latest_metrics.fasting_glucose }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.fasting_glucose.badge_class }}">
+                    {{ classifications.fasting_glucose.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">Total Cholesterol</span>
+                <span class="status-value">
+                    {% if latest_metrics.total_cholesterol %}{{ latest_metrics.total_cholesterol }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.total_cholesterol.badge_class }}">
+                    {{ classifications.total_cholesterol.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">Triglycerides</span>
+                <span class="status-value">
+                    {% if latest_metrics.triglycerides %}{{ latest_metrics.triglycerides }} mg/dL{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge {{ classifications.triglycerides.badge_class }}">
+                    {{ classifications.triglycerides.status }}
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-label">Heart Rate</span>
+                <span class="status-value">
+                    {% if latest_metrics.heart_rate %}{{ latest_metrics.heart_rate }} bpm{% else %}N/A{% endif %}
+                </span>
+                <span class="status-badge bg-secondary">Reference</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="no-data-message">
+    <i class="bi bi-clipboard-data"></i>
+    <h5>No Health Metrics Available</h5>
+    <p>Add health metrics to your MCU records to see analytics and trends.</p>
+    <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Record with Metrics
+    </a>
+</div>
+{% endif %}
+
+{% if has_sufficient_data and records_count >= 2 %}
+<!-- Trend Charts Section -->
+<div class="charts-section">
+    <div class="charts-section-header">
+        <h5>
+            <i class="bi bi-graph-up-arrow"></i>
+            Health Trends
+        </h5>
+        <div class="chart-tabs">
+            <button class="chart-tab active" data-chart="body">Body</button>
+            <button class="chart-tab" data-chart="blood-pressure">Blood Pressure</button>
+            <button class="chart-tab" data-chart="blood-sugar">Blood Sugar</button>
+            <button class="chart-tab" data-chart="lipids">Lipids</button>
+        </div>
+        <a href="{{ url_for('analytics.compare') }}" class="compare-link">
+            <i class="bi bi-arrow-left-right"></i>
+            Compare Records
+        </a>
+    </div>
+    
+    <!-- Body Measurements Chart -->
+    <div id="chart-body" class="chart-panel">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="mb-3">Weight Trend</h6>
+                <div class="chart-container">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="mb-3">BMI Trend</h6>
+                <div class="chart-container">
+                    <canvas id="bmiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Blood Pressure Chart -->
+    <div id="chart-blood-pressure" class="chart-panel" style="display: none;">
+        <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+            <canvas id="bloodPressureChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Blood Sugar Chart -->
+    <div id="chart-blood-sugar" class="chart-panel" style="display: none;">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="mb-3">Fasting Glucose Trend</h6>
+                <div class="chart-container">
+                    <canvas id="fastingGlucoseChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="mb-3">HbA1c Trend</h6>
+                <div class="chart-container">
+                    <canvas id="hba1cChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lipid Profile Chart -->
+    <div id="chart-lipids" class="chart-panel" style="display: none;">
+        <div class="chart-container" style="max-width: 900px; margin: 0 auto;">
+            <canvas id="lipidChart"></canvas>
+        </div>
+    </div>
+</div>
+{% elif has_sufficient_data and records_count == 1 %}
+<div class="no-data-message">
+    <i class="bi bi-plus-circle-dotted"></i>
+    <h5>Add More Records for Trends</h5>
+    <p>You need at least 2 MCU records with health metrics to see trend charts. Add another record to start tracking changes over time.</p>
+    <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Another Record
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chart tabs
+    initChartTabs();
+    
+    // Load trend data and initialize charts
+    loadTrendData();
+});
+
+// Chart instances storage
+let charts = {
+    weight: null,
+    bmi: null,
+    bloodPressure: null,
+    fastingGlucose: null,
+    hba1c: null,
+    lipid: null
+};
+
+function initChartTabs() {
+    const tabs = document.querySelectorAll('.chart-tab');
+    const panels = document.querySelectorAll('.chart-panel');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const chartType = this.dataset.chart;
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding panel
+            panels.forEach(panel => {
+                panel.style.display = 'none';
+            });
+            document.getElementById('chart-' + chartType).style.display = 'block';
+        });
+    });
+}
+
+function loadTrendData() {
+    fetch('{{ url_for("analytics.get_trend_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.log('Not enough data for trends');
+                return;
+            }
+            initializeCharts(data);
+        })
+        .catch(error => {
+            console.error('Error loading trend data:', error);
+        });
+}
+
+function initializeCharts(data) {
+    // Chart.js default configuration
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6c757d';
+    
+    // Common options for responsive charts
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: false,
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                }
+            }
+        }
+    };
+    
+    // Destroy existing charts if they exist
+    Object.values(charts).forEach(chart => {
+        if (chart) chart.destroy();
+    });
+    
+    // Weight Chart
+    if (data.body_measurements.weight.some(v => v !== null)) {
+        charts.weight = new Chart(document.getElementById('weightChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: data.body_measurements.weight,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    spanGaps: true
+                }]
+            },
+            options: commonOptions
+        });
+    }
+    
+    // BMI Chart
+    if (data.body_measurements.bmi.some(v => v !== null)) {
+        charts.bmi = new Chart(document.getElementById('bmiChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'BMI',
+                    data: data.body_measurements.bmi,
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    spanGaps: true
+                }]
+            },
+            options: commonOptions
+        });
+    }
+    
+    // Blood Pressure Chart
+    if (data.blood_pressure.systolic.some(v => v !== null) || 
+        data.blood_pressure.diastolic.some(v => v !== null)) {
+        charts.bloodPressure = new Chart(document.getElementById('bloodPressureChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Systolic (mmHg)',
+                        data: data.blood_pressure.systolic,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'Diastolic (mmHg)',
+                        data: data.blood_pressure.diastolic,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    annotation: {
+                        annotations: {
+                            hypertensionLine: {
+                                type: 'line',
+                                yMin: 140,
+                                yMax: 140,
+                                borderColor: '#dc3545',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: 'Hypertension Threshold',
+                                    position: 'end'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Fasting Glucose Chart
+    if (data.blood_sugar.fasting_glucose.some(v => v !== null)) {
+        charts.fastingGlucose = new Chart(document.getElementById('fastingGlucoseChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Fasting Glucose (mg/dL)',
+                    data: data.blood_sugar.fasting_glucose,
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    spanGaps: true
+                }]
+            },
+            options: commonOptions
+        });
+    }
+    
+    // HbA1c Chart
+    if (data.blood_sugar.hba1c.some(v => v !== null)) {
+        charts.hba1c = new Chart(document.getElementById('hba1cChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'HbA1c (%)',
+                    data: data.blood_sugar.hba1c,
+                    borderColor: '#6f42c1',
+                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    spanGaps: true
+                }]
+            },
+            options: commonOptions
+        });
+    }
+    
+    // Lipid Profile Chart
+    const hasLipidData = data.lipid_profile.total_cholesterol.some(v => v !== null) ||
+                          data.lipid_profile.ldl.some(v => v !== null) ||
+                          data.lipid_profile.hdl.some(v => v !== null) ||
+                          data.lipid_profile.triglycerides.some(v => v !== null);
+    
+    if (hasLipidData) {
+        charts.lipid = new Chart(document.getElementById('lipidChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Total Cholesterol',
+                        data: data.lipid_profile.total_cholesterol,
+                        borderColor: '#198754',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'LDL',
+                        data: data.lipid_profile.ldl,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'HDL',
+                        data: data.lipid_profile.hdl,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'Triglycerides',
+                        data: data.lipid_profile.triglycerides,
+                        borderColor: '#ffc107',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'mg/dL'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

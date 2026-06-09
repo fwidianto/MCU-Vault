@@ -18,12 +18,20 @@ MCU Vault is a secure Medical Check-Up (MCU) document management system that all
   - Liver Function (SGOT, SGPT)
   - Kidney Function (creatinine, uric acid)
   - Doctor's notes
+- **Health Analytics (Phase 2B)**: Analytics, visualization, and comparison
+  - Health Analytics Dashboard with latest health snapshot
+  - Interactive Trend Charts (Chart.js) for body measurements, blood pressure, blood sugar, and lipid profiles
+  - MCU Record Comparison with side-by-side analysis
+  - Rule-based Health Status Classification (BMI, Blood Pressure, HbA1c, LDL, HDL, etc.)
+  - Color-coded status badges (Green: Normal, Yellow: Borderline, Red: High Risk)
+  - CSV export for comparison results
 
 ## Technology Stack
 
 - **Backend**: Python Flask
 - **Database**: SQLite with SQLAlchemy ORM
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Charts**: Chart.js for interactive trend visualization
 - **Authentication**: Flask-Login
 
 ## Project Structure
@@ -43,10 +51,12 @@ mcu-vault/
 │   │   ├── auth.py          # Authentication routes
 │   │   ├── dashboard.py     # Dashboard routes
 │   │   ├── records.py       # MCU record CRUD routes
-│   │   └── upload.py        # File upload routes
+│   │   ├── upload.py        # File upload routes
+│   │   └── analytics.py     # Health analytics routes (Phase 2B)
 │   └── utils/
 │       ├── __init__.py
-│       └── helpers.py       # Utility functions
+│       ├── helpers.py       # Utility functions
+│       └── health_classification.py # Health classification rules (Phase 2B)
 ├── migrations/
 │   └── add_health_metrics.py # Database migration script
 ├── static/
@@ -59,13 +69,21 @@ mcu-vault/
 │   ├── base.html            # Base template
 │   ├── login.html           # Login page
 │   ├── register.html        # Registration page
-│   ├── dashboard.html       # Dashboard page
+│   ├── dashboard.html       # Dashboard page (enhanced in Phase 2B)
+│   ├── analytics/
+│   │   └── health_dashboard.html # Health analytics dashboard (Phase 2B)
 │   ├── records/
 │   │   ├── list.html        # Records list page
 │   │   ├── detail.html      # Record detail page
 │   │   ├── create.html      # Create record page
-│   │   └── edit.html        # Edit record page
+│   │   ├── edit.html        # Edit record page
+│   │   └── compare.html     # Record comparison page (Phase 2B)
 │   └── upload.html          # File upload page
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py          # Test fixtures
+│   ├── test_health_classification.py # Health classification tests (Phase 2B)
+│   └── test_analytics_routes.py      # Analytics routes tests (Phase 2B)
 ├── .env.example             # Environment variables template
 ├── requirements.txt         # Python dependencies
 ├── run.py                   # Application entry point
@@ -134,10 +152,69 @@ mcu-vault/
 4. Use the search bar to find records by patient name, company, or date
 5. Click on any record to view details, edit, or delete
 
+### Health Analytics (Phase 2B)
+1. Access the Health Analytics dashboard from the sidebar
+2. View your latest health snapshot with status classifications
+3. Explore trend charts for body measurements, blood pressure, blood sugar, and lipid profiles
+4. Use the Compare Records feature to analyze changes between two check-ups
+5. Export comparison results as CSV for further analysis
+
 ### File Upload
 - Supported formats: PDF, JPG, JPEG, PNG
 - Maximum file size: 16MB
 - Files are associated with specific MCU records
+
+## Health Classification Guidelines (Phase 2B)
+
+The system uses rule-based classification for health metrics:
+
+### BMI
+| Classification | Range |
+|----------------|-------|
+| Underweight | < 18.5 |
+| Normal | 18.5 - 24.9 |
+| Overweight | 25.0 - 29.9 |
+| Obese | >= 30 |
+
+### Blood Pressure
+| Classification | Systolic | Diastolic |
+|----------------|----------|-----------|
+| Normal | < 120 | < 80 |
+| Elevated | 120-129 | < 80 |
+| Hypertension Stage 1 | 130-139 | 80-89 |
+| Hypertension Stage 2 | >= 140 | >= 90 |
+
+### HbA1c
+| Classification | Range |
+|----------------|-------|
+| Normal | < 5.7% |
+| Prediabetes | 5.7 - 6.4% |
+| Diabetes | >= 6.5% |
+
+### LDL Cholesterol
+| Classification | Range (mg/dL) |
+|----------------|---------------|
+| Optimal | < 100 |
+| Near Optimal | 100 - 129 |
+| Borderline High | 130 - 159 |
+| High | 160 - 189 |
+| Very High | >= 190 |
+
+## Testing
+
+Run the automated tests:
+
+```bash
+# Install pytest if not already installed
+pip install pytest
+
+# Run all tests
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_health_classification.py -v
+pytest tests/test_analytics_routes.py -v
+```
 
 ## Security Considerations
 
