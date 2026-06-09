@@ -1391,3 +1391,167 @@ body {
 .bg-danger { background-color: var(--danger-color) !important; }
 .bg-warning { background-color: var(--warning-color) !important; }
 .bg-info { background-color: var(--info-color) !important; }
+
+/* ==================== Health Metrics Styles (Phase 2A) ==================== */
+.section-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--info-color);
+    color: var(--dark-text);
+    border-radius: var(--radius-sm);
+    margin-left: 0.5rem;
+    font-weight: 500;
+}
+
+.section-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.metric-group {
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric-group-title {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-gray);
+    font-weight: 600;
+}
+
+.metric-group-title i {
+    margin-right: 0.5rem;
+}
+
+/* Health Metrics Section on Detail Page */
+.health-metrics-section {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.health-metrics-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.health-metrics-header i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.health-metrics-header h5 {
+    margin: 0;
+    color: var(--dark-text);
+    font-weight: 600;
+}
+
+.health-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.health-metrics-card {
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    border: 1px solid var(--border-gray);
+}
+
+.health-metrics-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.health-metrics-card-header i {
+    color: var(--primary-color);
+}
+
+.health-metrics-card-header h6 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.health-metrics-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.health-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.health-metric-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.health-metric-value {
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.doctor-notes-section {
+    background: #fff3cd;
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid #ffeaa7;
+}
+
+.doctor-notes-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.doctor-notes-header i {
+    color: #856404;
+}
+
+.doctor-notes-header h6 {
+    margin: 0;
+    color: #856404;
+    font-weight: 600;
+}
+
+.doctor-notes-content {
+    color: #856404;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Responsive adjustments for health metrics */
+@media (max-width: 768px) {
+    .health-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-group {
+        padding: 0.75rem;
+    }
+}

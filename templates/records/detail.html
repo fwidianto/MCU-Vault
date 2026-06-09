@@ -98,6 +98,151 @@
     </div>
     {% endif %}
     
+    <!-- Health Metrics Section -->
+    {% if health_metrics and health_metrics.has_data %}
+    <div class="health-metrics-section">
+        <div class="health-metrics-header">
+            <i class="bi bi-heart-pulse"></i>
+            <h5>Health Metrics</h5>
+        </div>
+        
+        <div class="health-metrics-grid">
+            <!-- Basic Measurements -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-rulers"></i>
+                    <h6>Basic Measurements</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Height</span>
+                        <span class="health-metric-value">{{ health_metrics.height_cm|default('N/A') }}{% if health_metrics.height_cm %} cm{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Weight</span>
+                        <span class="health-metric-value">{{ health_metrics.weight_kg|default('N/A') }}{% if health_metrics.weight_kg %} kg{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">BMI</span>
+                        <span class="health-metric-value">{{ health_metrics.bmi|default('N/A') }}{% if health_metrics.bmi %}{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vital Signs -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-activity"></i>
+                    <h6>Vital Signs</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Blood Pressure</span>
+                        <span class="health-metric-value">{% if health_metrics.systolic_bp and health_metrics.diastolic_bp %}{{ health_metrics.systolic_bp }}/{{ health_metrics.diastolic_bp }} mmHg{% else %}N/A{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Heart Rate</span>
+                        <span class="health-metric-value">{{ health_metrics.heart_rate|default('N/A') }}{% if health_metrics.heart_rate %} bpm{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blood Sugar -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-droplet"></i>
+                    <h6>Blood Sugar</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Fasting Glucose</span>
+                        <span class="health-metric-value">{{ health_metrics.fasting_glucose|default('N/A') }}{% if health_metrics.fasting_glucose %} mg/dL{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">HbA1c</span>
+                        <span class="health-metric-value">{{ health_metrics.hba1c|default('N/A') }}{% if health_metrics.hba1c %}%{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lipid Profile -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-droplet-half"></i>
+                    <h6>Lipid Profile</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Total Cholesterol</span>
+                        <span class="health-metric-value">{{ health_metrics.total_cholesterol|default('N/A') }}{% if health_metrics.total_cholesterol %} mg/dL{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">LDL</span>
+                        <span class="health-metric-value">{{ health_metrics.ldl|default('N/A') }}{% if health_metrics.ldl %} mg/dL{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">HDL</span>
+                        <span class="health-metric-value">{{ health_metrics.hdl|default('N/A') }}{% if health_metrics.hdl %} mg/dL{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Triglycerides</span>
+                        <span class="health-metric-value">{{ health_metrics.triglycerides|default('N/A') }}{% if health_metrics.triglycerides %} mg/dL{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liver Function -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-virus"></i>
+                    <h6>Liver Function</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">SGOT/AST</span>
+                        <span class="health-metric-value">{{ health_metrics.sgot|default('N/A') }}{% if health_metrics.sgot %} U/L{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">SGPT/ALT</span>
+                        <span class="health-metric-value">{{ health_metrics.sgpt|default('N/A') }}{% if health_metrics.sgpt %} U/L{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kidney Function -->
+            <div class="health-metrics-card">
+                <div class="health-metrics-card-header">
+                    <i class="bi bi-droplet-fill"></i>
+                    <h6>Kidney Function</h6>
+                </div>
+                <div class="health-metrics-card-body">
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Creatinine</span>
+                        <span class="health-metric-value">{{ health_metrics.creatinine|default('N/A') }}{% if health_metrics.creatinine %} mg/dL{% endif %}</span>
+                    </div>
+                    <div class="health-metric-row">
+                        <span class="health-metric-label">Uric Acid</span>
+                        <span class="health-metric-value">{{ health_metrics.uric_acid|default('N/A') }}{% if health_metrics.uric_acid %} mg/dL{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Doctor Notes -->
+        {% if health_metrics.doctor_notes %}
+        <div class="doctor-notes-section">
+            <div class="doctor-notes-header">
+                <i class="bi bi-journal-medical"></i>
+                <h6>Doctor's Notes</h6>
+            </div>
+            <div class="doctor-notes-content">
+                {{ health_metrics.doctor_notes }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
     <!-- Files Section -->
     <div class="files-section">
         <div class="files-header">

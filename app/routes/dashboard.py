@@ -7,6 +7,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from app import db
 from app.models.mcu_record import MCURecord, UploadedFile
+from app.models.health_metrics import HealthMetrics
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -59,6 +60,17 @@ def index():
         MCURecord.created_at >= seven_days_ago
     ).count()
     
+    # Health Metrics Statistics (Phase 2A)
+    # Count records with health metrics
+    records_with_metrics = db.session.query(func.count(HealthMetrics.id)).join(
+        MCURecord
+    ).filter(
+        MCURecord.user_id == current_user.id
+    ).scalar() or 0
+    
+    # Records without health metrics
+    records_without_metrics = total_records - records_with_metrics
+    
     context = {
         'total_records': total_records,
         'total_files': total_files,
@@ -70,7 +82,10 @@ def index():
         'pending_count': status_dict.get('pending', 0),
         'cleared_count': status_dict.get('cleared', 0),
         'not_cleared_count': status_dict.get('not-cleared', 0),
-        'follow_up_count': status_dict.get('needs-follow-up', 0)
+        'follow_up_count': status_dict.get('needs-follow-up', 0),
+        # Health metrics statistics
+        'records_with_metrics': records_with_metrics,
+        'records_without_metrics': records_without_metrics
     }
     
     return render_template('dashboard.html', **context)

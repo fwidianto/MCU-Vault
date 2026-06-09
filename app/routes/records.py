@@ -6,8 +6,46 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from app import db
 from app.models.mcu_record import MCURecord, UploadedFile
+from app.models.health_metrics import HealthMetrics
 
 records_bp = Blueprint('records', __name__)
+
+
+# Validation ranges for health metrics
+VALIDATION_RANGES = {
+    'height_cm': {'min': 50, 'max': 250, 'name': 'Height'},
+    'weight_kg': {'min': 1, 'max': 500, 'name': 'Weight'},
+    'bmi': {'min': 5, 'max': 100, 'name': 'BMI'},
+    'systolic_bp': {'min': 0, 'max': 300, 'name': 'Systolic BP'},
+    'diastolic_bp': {'min': 0, 'max': 200, 'name': 'Diastolic BP'},
+    'heart_rate': {'min': 0, 'max': 250, 'name': 'Heart Rate'},
+    'fasting_glucose': {'min': 0, 'max': 600, 'name': 'Fasting Glucose'},
+    'hba1c': {'min': 0, 'max': 20, 'name': 'HbA1c'},
+    'total_cholesterol': {'min': 0, 'max': 600, 'name': 'Total Cholesterol'},
+    'ldl': {'min': 0, 'max': 400, 'name': 'LDL'},
+    'hdl': {'min': 0, 'max': 150, 'name': 'HDL'},
+    'triglycerides': {'min': 0, 'max': 1000, 'name': 'Triglycerides'},
+    'sgot': {'min': 0, 'max': 500, 'name': 'SGOT'},
+    'sgpt': {'min': 0, 'max': 500, 'name': 'SGPT'},
+    'creatinine': {'min': 0, 'max': 20, 'name': 'Creatinine'},
+    'uric_acid': {'min': 0, 'max': 20, 'name': 'Uric Acid'}
+}
+
+
+def validate_health_metric(field_name, value):
+    """Validate a single health metric field."""
+    if value is None or value == '':
+        return None  # Allow NULL values
+    
+    try:
+        float_val = float(value)
+        if field_name in VALIDATION_RANGES:
+            ranges = VALIDATION_RANGES[field_name]
+            if float_val < ranges['min'] or float_val > ranges['max']:
+                return f"{ranges['name']} must be between {ranges['min']} and {ranges['max']}."
+        return float_val
+    except (ValueError, TypeError):
+        return "Invalid number format."
 
 
 @records_bp.route('/records')
@@ -67,7 +105,7 @@ def list():
 @records_bp.route('/records/create', methods=['GET', 'POST'])
 @login_required
 def create():
-    """Create a new MCU record."""
+    """Create a new MCU record with optional health metrics."""
     if request.method == 'POST':
         patient_name = request.form.get('patient_name', '').strip()
         company = request.form.get('company', '').strip()
@@ -94,6 +132,36 @@ def create():
             except ValueError:
                 errors.append('Invalid date format. Use YYYY-MM-DD.')
         
+        # Validate health metrics
+        health_errors = []
+        health_data = {}
+        
+        metric_fields = [
+            'height_cm', 'weight_kg', 'bmi',
+            'systolic_bp', 'diastolic_bp', 'heart_rate',
+            'fasting_glucose', 'hba1c',
+            'total_cholesterol', 'ldl', 'hdl', 'triglycerides',
+            'sgot', 'sgpt',
+            'creatinine', 'uric_acid'
+        ]
+        
+        for field in metric_fields:
+            value = request.form.get(field, '').strip()
+            validated = validate_health_metric(field, value)
+            if isinstance(validated, str):  # It's an error message
+                health_errors.append(validated)
+            else:
+                health_data[field] = validated
+        
+        # Check if any health metrics were entered
+        has_health_data = any(v is not None for v in health_data.values())
+        
+        # Doctor notes
+        doctor_notes = request.form.get('doctor_notes', '').strip()
+        
+        if health_errors:
+            errors.extend(health_errors)
+        
         if errors:
             for error in errors:
                 flash(error, 'danger')
@@ -102,7 +170,9 @@ def create():
                                    company=company,
                                    mcu_date=mcu_date_str,
                                    status=status,
-                                   notes=notes)
+                                   notes=notes,
+                                   health_data=health_data,
+                                   doctor_notes=doctor_notes)
         
         # Create record
         record = MCURecord(
@@ -115,6 +185,21 @@ def create():
         )
         
         db.session.add(record)
+        db.session.flush()  # Get the record ID
+        
+        # Create health metrics if any data was provided
+        if has_health_data or doctor_notes:
+            metrics = HealthMetrics(
+                mcu_record_id=record.id,
+                doctor_notes=doctor_notes or None,
+                **health_data
+            )
+            db.session.add(metrics)
+            
+            # Auto-calculate BMI if height and weight provided
+            if metrics.height_cm and metrics.weight_kg:
+                metrics.calculate_bmi()
+        
         db.session.commit()
         
         flash(f'MCU record for {patient_name} created successfully!', 'success')
@@ -126,7 +211,7 @@ def create():
 @records_bp.route('/records/<int:record_id>')
 @login_required
 def detail(record_id):
-    """View MCU record details."""
+    """View MCU record details with health metrics."""
     record = MCURecord.query.filter_by(id=record_id, user_id=current_user.id).first()
     
     if not record:
@@ -136,13 +221,16 @@ def detail(record_id):
     # Get associated files
     files = record.files.all()
     
-    return render_template('records/detail.html', record=record, files=files)
+    # Get health metrics (if exists)
+    health_metrics = record.health_metrics
+    
+    return render_template('records/detail.html', record=record, files=files, health_metrics=health_metrics)
 
 
 @records_bp.route('/records/<int:record_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(record_id):
-    """Edit an existing MCU record."""
+    """Edit an existing MCU record with health metrics."""
     record = MCURecord.query.filter_by(id=record_id, user_id=current_user.id).first()
     
     if not record:
@@ -174,6 +262,33 @@ def edit(record_id):
                 mcu_date = datetime.strptime(mcu_date_str, '%Y-%m-%d').date()
             except ValueError:
                 errors.append('Invalid date format. Use YYYY-MM-DD.')
+        
+        # Validate health metrics
+        health_errors = []
+        health_data = {}
+        
+        metric_fields = [
+            'height_cm', 'weight_kg', 'bmi',
+            'systolic_bp', 'diastolic_bp', 'heart_rate',
+            'fasting_glucose', 'hba1c',
+            'total_cholesterol', 'ldl', 'hdl', 'triglycerides',
+            'sgot', 'sgpt',
+            'creatinine', 'uric_acid'
+        ]
+        
+        for field in metric_fields:
+            value = request.form.get(field, '').strip()
+            validated = validate_health_metric(field, value)
+            if isinstance(validated, str):  # It's an error message
+                health_errors.append(validated)
+            else:
+                health_data[field] = validated
+        
+        # Doctor notes
+        doctor_notes = request.form.get('doctor_notes', '').strip()
+        
+        if health_errors:
+            errors.extend(health_errors)
         
         if errors:
             for error in errors:
@@ -187,6 +302,33 @@ def edit(record_id):
         record.status = status
         record.notes = notes or None
         record.updated_at = datetime.utcnow()
+        
+        # Update or create health metrics
+        has_health_data = any(v is not None for v in health_data.values())
+        
+        if has_health_data or doctor_notes:
+            if record.health_metrics:
+                # Update existing
+                metrics = record.health_metrics
+                for key, value in health_data.items():
+                    setattr(metrics, key, value)
+                metrics.doctor_notes = doctor_notes or None
+                
+                # Auto-calculate BMI if height and weight provided
+                if metrics.height_cm and metrics.weight_kg:
+                    metrics.calculate_bmi()
+            else:
+                # Create new
+                metrics = HealthMetrics(
+                    mcu_record_id=record.id,
+                    doctor_notes=doctor_notes or None,
+                    **health_data
+                )
+                db.session.add(metrics)
+                
+                # Auto-calculate BMI if height and weight provided
+                if metrics.height_cm and metrics.weight_kg:
+                    metrics.calculate_bmi()
         
         db.session.commit()
         

@@ -84,6 +84,34 @@
         </div>
     </div>
     
+    <!-- Health Metrics Summary -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h5><i class="bi bi-heart-pulse"></i> Health Metrics</h5>
+        </div>
+        <div class="card-body">
+            <div class="status-list">
+                <div class="status-item">
+                    <span class="status-badge bg-primary">
+                        <i class="bi bi-clipboard2-pulse"></i> With Metrics
+                    </span>
+                    <span class="status-count">{{ records_with_metrics }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-badge bg-secondary">
+                        <i class="bi bi-file-earmark"></i> Without Metrics
+                    </span>
+                    <span class="status-count">{{ records_without_metrics }}</span>
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <small class="text-muted">
+                    {{ (records_with_metrics / total_records * 100)|round(1) if total_records > 0 else 0 }}% of records have health data
+                </small>
+            </div>
+        </div>
+    </div>
+    
     <!-- Quick Actions -->
     <div class="dashboard-card">
         <div class="card-header">

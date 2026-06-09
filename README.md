@@ -10,6 +10,14 @@ MCU Vault is a secure Medical Check-Up (MCU) document management system that all
 - **File Upload**: Upload PDF, JPG, JPEG, and PNG files
 - **Advanced Search**: Search by patient name, company, or MCU date
 - **Responsive Design**: Professional medical-themed UI with sidebar navigation
+- **Health Metrics (Phase 2A)**: Structured health data entry for medical check-up records
+  - Basic Measurements (height, weight, BMI)
+  - Vital Signs (blood pressure, heart rate)
+  - Blood Sugar (fasting glucose, HbA1c)
+  - Lipid Profile (cholesterol, LDL, HDL, triglycerides)
+  - Liver Function (SGOT, SGPT)
+  - Kidney Function (creatinine, uric acid)
+  - Doctor's notes
 
 ## Technology Stack
 
@@ -28,7 +36,8 @@ mcu-vault/
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── user.py          # User model
-│   │   └── mcu_record.py    # MCU Record & UploadedFile models
+│   │   ├── mcu_record.py    # MCU Record & UploadedFile models
+│   │   └── health_metrics.py # Health Metrics model (Phase 2A)
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── auth.py          # Authentication routes
@@ -38,6 +47,8 @@ mcu-vault/
 │   └── utils/
 │       ├── __init__.py
 │       └── helpers.py       # Utility functions
+├── migrations/
+│   └── add_health_metrics.py # Database migration script
 ├── static/
 │   ├── css/
 │   │   └── styles.css       # Main stylesheet
@@ -170,6 +181,31 @@ mcu-vault/
 | file_size | INTEGER | File size in bytes |
 | mcu_record_id | INTEGER | Foreign key to MCU records |
 | uploaded_at | DATETIME | Upload timestamp |
+
+### Health Metrics Table (Phase 2A)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER | Primary key |
+| mcu_record_id | INTEGER | Foreign key to MCU records (unique) |
+| height_cm | FLOAT | Height in centimeters |
+| weight_kg | FLOAT | Weight in kilograms |
+| bmi | FLOAT | Body Mass Index |
+| systolic_bp | INTEGER | Systolic blood pressure (mmHg) |
+| diastolic_bp | INTEGER | Diastolic blood pressure (mmHg) |
+| heart_rate | INTEGER | Heart rate (bpm) |
+| fasting_glucose | FLOAT | Fasting glucose (mg/dL) |
+| hba1c | FLOAT | HbA1c percentage |
+| total_cholesterol | FLOAT | Total cholesterol (mg/dL) |
+| ldl | FLOAT | LDL cholesterol (mg/dL) |
+| hdl | FLOAT | HDL cholesterol (mg/dL) |
+| triglycerides | FLOAT | Triglycerides (mg/dL) |
+| sgot | FLOAT | SGOT/AST (U/L) |
+| sgpt | FLOAT | SGPT/ALT (U/L) |
+| creatinine | FLOAT | Creatinine (mg/dL) |
+| uric_acid | FLOAT | Uric acid (mg/dL) |
+| doctor_notes | TEXT | Doctor's observations |
+| created_at | DATETIME | Record creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
 
 ## Contributing
 

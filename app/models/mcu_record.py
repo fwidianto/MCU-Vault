@@ -24,6 +24,9 @@ class MCURecord(db.Model):
     # Relationship to uploaded files
     files = db.relationship('UploadedFile', backref='mcu_record', lazy='dynamic', cascade='all, delete-orphan')
     
+    # Relationship to health metrics (one-to-one)
+    health_metrics = db.relationship('HealthMetrics', backref='mcu_record', uselist=False, cascade='all, delete-orphan')
+    
     def __repr__(self):
         return f'<MCURecord {self.patient_name} - {self.mcu_date}>'
     
