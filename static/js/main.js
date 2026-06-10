@@ -5,23 +5,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components
     initSidebar();
-    initPasswordToggles();
     initAutoHideAlerts();
     initFormValidation();
     initCurrentDate();
 });
 
-/**
- * Initialize password visibility toggles
- */
-function initPasswordToggles() {
+// Initialize password toggles when page loads
+document.addEventListener('DOMContentLoaded', function() {
     const toggleButtons = document.querySelectorAll('.password-toggle');
-    
     toggleButtons.forEach(function(button) {
         button.addEventListener('click', function() {
             const input = this.parentElement.querySelector('input');
             const icon = this.querySelector('i');
-            
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('bi-eye');
@@ -33,7 +28,7 @@ function initPasswordToggles() {
             }
         });
     });
-}
+});
 
 /**
  * Sidebar toggle for mobile devices
