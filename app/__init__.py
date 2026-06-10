@@ -34,6 +34,17 @@ def create_app(config_name='default'):
     # Load configuration
     from app.config import config
     app.config.from_object(config[config_name])
+
+    # Dynamically set SESSION_COOKIE_SECURE based on HTTPS detection
+    # This allows production to work over HTTP when behind a proxy without HTTPS
+    if config_name == 'production':
+        is_https = (
+            app.config.get('SECURE_COOKIE_HTTPS', False) or
+            os.environ.get('HTTPS', '').lower() in ('on', '1') or
+            os.environ.get('FLASK_HTTPS', '').lower() == 'true'
+        )
+        app.config['SESSION_COOKIE_SECURE'] = is_https
+
     
     # Ensure upload directory exists
     upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')

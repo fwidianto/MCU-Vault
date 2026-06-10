@@ -34,7 +34,8 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
+    # SESSION_COOKIE_SECURE will be set dynamically based on HTTPS detection
+    # This prevents session cookie issues when running behind HTTP proxy
 
 
 class TestingConfig(Config):
