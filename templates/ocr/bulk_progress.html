@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Import Progress - MCU Vault{% endblock %}
+
+{% block page_title %}Bulk Import Progress{% endblock %}
+
+{% block content %}
+<div class="bulk-progress-container">
+    <div class="d-flex justify-content-between mb-4">
+        <h4>
+            <i class="bi bi-hourglass-split"></i> Processing {{ jobs|length }} Files
+        </h4>
+        <button type="button" class="btn btn-primary" onclick="processNext()">
+            <i class="bi bi-play"></i> Process Next
+        </button>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr id="row-{{ job.id }}">
+                            <td>
+                                <i class="bi bi-file-earmark"></i> {{ job.filename }}
+                            </td>
+                            <td>
+                                {% if job.status == 'pending' %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-clock"></i> Pending
+                                </span>
+                                {% elif job.status == 'processing' %}
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-arrow-repeat"></i> Processing...
+                                </span>
+                                {% elif job.status == 'completed' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Completed
+                                </span>
+                                {% elif job.status == 'failed' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> Failed
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == 'completed' %}
+                                <button type="button" class="btn btn-sm btn-success" onclick="viewResult('{{ job.id }}')">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                {% elif job.status == 'failed' %}
+                                <span class="text-danger small">{{ job.error }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('ocr.bulk') }}" class="btn btn-secondary">
+                    <i class="bi bi-plus"></i> Add More Files
+                </a>
+                <button type="button" class="btn btn-success" onclick="saveAll()" id="saveBtn" disabled>
+                    <i class="bi bi-save"></i> Save All Completed
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentIndex = 0;
+const jobs = {{ jobs|tojson }};
+
+function updateProgress() {
+    const completedCount = jobs.filter(j => j.status === 'completed').length;
+    const saveBtn = document.getElementById('saveBtn');
+    if (completedCount > 0) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<i class="bi bi-save"></i> Save ${completedCount} Record(s)`;
+    }
+}
+
+async function processNext() {
+    const pendingJob = jobs.find(j => j.status === 'pending');
+    if (!pendingJob) {
+        alert('All files have been processed!');
+        return;
+    }
+    
+    const row = document.getElementById('row-' + pendingJob.id);
+    row.querySelector('.badge').outerHTML = '<span class="badge bg-primary"><i class="bi bi-arrow-repeat"></i> Processing...</span>';
+    
+    try {
+        const response = await fetch('/ocr/bulk/process/' + pendingJob.id);
+        const data = await response.json();
+        
+        pendingJob.status = data.status;
+        const badge = row.querySelector('.badge');
+        if (data.status === 'completed') {
+            badge.className = 'badge bg-success';
+            badge.innerHTML = '<i class="bi bi-check-circle"></i> Completed';
+        } else if (data.status === 'failed') {
+            badge.className = 'badge bg-danger';
+            badge.innerHTML = '<i class="bi bi-x-circle"></i> Failed';
+        }
+        
+        updateProgress();
+    } catch (error) {
+        console.error('Processing error:', error);
+    }
+}
+
+function viewResult(jobId) {
+    // Could open a modal with the extraction results
+    alert('Result viewing not yet implemented');
+}
+
+async function saveAll() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("ocr.bulk_save") }}';
+    document.body.appendChild(form);
+    form.submit();
+}
+
+updateProgress();
+</script>
+{% endblock %}

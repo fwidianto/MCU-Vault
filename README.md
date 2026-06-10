@@ -26,6 +26,15 @@ MCU Vault is a secure Medical Check-Up (MCU) document management system that all
   - Color-coded status badges (Green: Normal, Yellow: Borderline, Red: High Risk)
   - CSV export for comparison results
 
+- **OCR Import (Phase 2C)**: Document ingestion and automatic data extraction
+  - Upload MCU reports (PDF, JPG, JPEG, PNG)
+  - Automatic OCR text extraction using Tesseract
+  - Smart field mapping engine for common MCU variations (TB/BB, GDS, SGOT/SGPT, etc.)
+  - Review screen with confidence indicators
+  - User confirmation before saving (never auto-save)
+  - Bulk import for batch processing
+  - Error handling for poor quality images, rotated documents, and missing values
+
 ## Technology Stack
 
 - **Backend**: Python Flask
@@ -52,7 +61,12 @@ mcu-vault/
 │   │   ├── dashboard.py     # Dashboard routes
 │   │   ├── records.py       # MCU record CRUD routes
 │   │   ├── upload.py        # File upload routes
-│   │   └── analytics.py     # Health analytics routes (Phase 2B)
+│   │   ├── analytics.py     # Health analytics routes (Phase 2B)
+│   │   └── ocr.py           # OCR import routes (Phase 2C)
+│   └── services/
+│       ├── __init__.py
+│       ├── ocr_service.py    # OCR service layer (Phase 2C)
+│       └── ocr_mapping.py   # Field mapping engine (Phase 2C)
 │   └── utils/
 │       ├── __init__.py
 │       ├── helpers.py       # Utility functions
@@ -72,6 +86,11 @@ mcu-vault/
 │   ├── dashboard.html       # Dashboard page (enhanced in Phase 2B)
 │   ├── analytics/
 │   │   └── health_dashboard.html # Health analytics dashboard (Phase 2B)
+│   ├── ocr/
+│   │   ├── upload.html      # OCR upload page (Phase 2C)
+│   │   ├── review.html      # OCR review screen (Phase 2C)
+│   │   ├── bulk.html        # Bulk import page (Phase 2C)
+│   │   └── bulk_progress.html # Bulk processing progress (Phase 2C)
 │   ├── records/
 │   │   ├── list.html        # Records list page
 │   │   ├── detail.html      # Record detail page
@@ -83,7 +102,9 @@ mcu-vault/
 │   ├── __init__.py
 │   ├── conftest.py          # Test fixtures
 │   ├── test_health_classification.py # Health classification tests (Phase 2B)
-│   └── test_analytics_routes.py      # Analytics routes tests (Phase 2B)
+│   ├── test_analytics_routes.py      # Analytics routes tests (Phase 2B)
+│   ├── test_auth.py         # Authentication tests
+│   └── test_ocr.py          # OCR tests (Phase 2C)
 ├── .env.example             # Environment variables template
 ├── requirements.txt         # Python dependencies
 ├── run.py                   # Application entry point

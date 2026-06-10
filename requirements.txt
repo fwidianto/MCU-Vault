@@ -4,3 +4,8 @@ Flask-Login==0.6.3
 Werkzeug==3.0.1
 python-dotenv==1.0.0
 gunicorn==21.2.0
+
+# OCR dependencies (install tesseract-ocr and poppler-utils separately on the system)
+pytesseract==0.3.10
+Pillow==10.1.0
+pdf2image==1.16.3
