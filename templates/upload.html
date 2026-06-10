@@ -38,6 +38,7 @@
               enctype="multipart/form-data" 
               class="upload-form"
               id="uploadForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <div class="drop-zone" id="dropZone">
                 <i class="bi bi-cloud-arrow-up-fill"></i>
@@ -134,6 +135,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteFileForm" method="POST" style="display: inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Delete File
                     </button>

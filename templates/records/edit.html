@@ -23,6 +23,7 @@
         </div>
         
         <form method="POST" action="{{ url_for('records.edit', record_id=record.id) }}" class="mcu-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-section">
                 <h5 class="section-title">
                     <i class="bi bi-person-badge"></i> Patient Information

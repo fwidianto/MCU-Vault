@@ -19,6 +19,7 @@
                     </p>
                     
                     <form action="{{ url_for('ocr.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-4">
                             <label for="file" class="form-label">
                                 <i class="bi bi-cloud-upload"></i> Select File(s)

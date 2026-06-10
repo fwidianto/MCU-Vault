@@ -5,10 +5,12 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 # Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 
 def create_app(config_name='default'):
@@ -45,7 +47,6 @@ def create_app(config_name='default'):
         )
         app.config['SESSION_COOKIE_SECURE'] = is_https
 
-    
     # Ensure upload directory exists
     upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')
     if not os.path.exists(upload_folder):
@@ -57,6 +58,9 @@ def create_app(config_name='default'):
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
+    
+    # Initialize CSRF protection (skip for API-only endpoints)
+    csrf.init_app(app)
     
     # User loader for Flask-Login
     from app.models.user import User

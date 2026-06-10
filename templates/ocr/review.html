@@ -19,6 +19,7 @@
     
     {% if results %}
     <form action="{{ url_for('ocr.save') }}" method="POST" id="reviewForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="d-flex justify-content-between mb-4">
             <h4>
                 <i class="bi bi-check-circle text-success"></i>

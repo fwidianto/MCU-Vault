@@ -147,7 +147,7 @@ mcu-vault/
    The database will be automatically created on first run.
    Alternatively, you can create it manually:
    ```bash
-   python -c "from app import create_app; from app.models import db; app = create_app(); app.app_context().push(); db.create_all(); print('Database created successfully!')"
+   python -c "from app import create_app; from app import db; app = create_app(); app.app_context().push(); db.create_all(); print('Database created successfully!')"
    ```
 
 6. **Run the application**
