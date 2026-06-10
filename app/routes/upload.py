@@ -141,7 +141,7 @@ def delete_file(record_id, file_id):
     return redirect(url_for('records.detail', record_id=record_id))
 
 
-@upload_bp.route('/files/')
+@upload_bp.route('/files/<filename>')
 @login_required
 def serve_file(filename):
     """Serve an uploaded file."""
@@ -166,7 +166,7 @@ def serve_file(filename):
                                download_name=uploaded_file.original_filename)
 
 
-@upload_bp.route('/files//download')
+@upload_bp.route('/files/<filename>/download')
 @login_required
 def download_file(filename):
     """Download an uploaded file."""

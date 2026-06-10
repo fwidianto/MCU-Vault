@@ -21,7 +21,15 @@ def create_app(config_name='default'):
     Returns:
         Flask application instance
     """
-    app = Flask(__name__)
+    # Get the project root (parent of app directory) for templates and static
+    import app as app_module
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(app_module.__file__)))
+    
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(project_root, 'templates'),
+        static_folder=os.path.join(project_root, 'static')
+    )
     
     # Load configuration
     from app.config import config
