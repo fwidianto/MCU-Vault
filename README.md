@@ -284,6 +284,59 @@ pytest tests/test_analytics_routes.py -v
 | created_at | DATETIME | Record creation timestamp |
 | updated_at | DATETIME | Last update timestamp |
 
+## Data Seeding Utility
+
+MCU Vault includes a data seeding utility for generating realistic test data with historical health progression.
+
+### Usage
+
+```bash
+# Seed demo data (default demo user)
+python scripts/seed_data.py
+
+# Reset and reseed (clears existing demo data)
+python scripts/seed_data.py --reset
+
+# Seed data for a specific user email
+python scripts/seed_data.py --user-email user@example.com
+```
+
+### What Gets Created
+
+- **1 Demo User**: `demo@mcu-vault.com` / `demo123`
+- **15 MCU Records**: Spanning 2012-2026
+- **15 Health Metrics**: One for each record
+
+### Health Progression Timeline
+
+The seed data creates believable health trends over 14 years:
+
+| Period | Health Status |
+|--------|---------------|
+| 2012-2017 | Healthy baseline with normal metrics |
+| 2018-2021 | Weight gain, LDL increasing |
+| 2021 | Prediabetes threshold (fasting glucose ~112) |
+| 2023 | Borderline hypertension (BP 138/88) |
+| 2024-2025 | Lifestyle improvements begin |
+| 2026 | Improved BMI, glucose, and blood pressure |
+
+### Generated Metrics
+
+Each health record includes:
+- Body measurements: height, weight, BMI
+- Vital signs: blood pressure, heart rate
+- Blood sugar: fasting glucose, HbA1c
+- Lipid profile: total cholesterol, LDL, HDL, triglycerides
+- Liver function: SGOT, SGPT
+- Kidney function: creatinine, uric acid
+
+### Running Tests
+
+```bash
+# Run seed data tests
+pytest tests/test_seed_data.py -v
+```
+
 ## Contributing
 
 1. Fork the repository
