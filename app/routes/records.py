@@ -205,7 +205,7 @@ def create():
         flash(f'MCU record for {patient_name} created successfully!', 'success')
         return redirect(url_for('records.detail', record_id=record.id))
     
-    return render_template('records/create.html')
+    return render_template('records/create.html', health_data={})
 
 
 @records_bp.route('/records/<int:record_id>')
