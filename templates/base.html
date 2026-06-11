@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MCU Vault - Secure Medical Check-Up Document Management System">
     <title>{% block title %}MCU Vault{% endblock %}</title>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,92 +17,145 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     
     {% block extra_css %}{% endblock %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <style>
+        /* Critical overrides for Bootstrap */
+        :root {
+            --bs-primary: #2563eb;
+            --bs-success: #10b981;
+            --bs-warning: #f59e0b;
+            --bs-danger: #ef4444;
+            --bs-info: #06b6d4;
+        }
+    </style>
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <i class="bi bi-shield-check"></i>
-            <span>MCU Vault</span>
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Modern Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('dashboard.index') }}" class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <span class="sidebar-brand-text">MCU Vault</span>
+            </a>
         </div>
         
         <nav class="sidebar-nav">
-            <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ url_for('records.list') }}" class="nav-item {% if 'records' in request.endpoint and 'compare' not in request.endpoint %}active{% endif %}">
-                <i class="bi bi-file-earmark-medical"></i>
-                <span>MCU Records</span>
-            </a>
-            <a href="{{ url_for('records.create') }}" class="nav-item {% if request.endpoint == 'records.create' %}active{% endif %}">
-                <i class="bi bi-plus-circle"></i>
-                <span>New Record</span>
-            </a>
-            <a href="{{ url_for('ocr.index') }}" class="nav-item {% if 'ocr' in request.endpoint %}active{% endif %}">
-                <i class="bi bi-upload"></i>
-                <span>OCR Import</span>
-            </a>
-            <a href="{{ url_for('ai.index') }}" class="nav-item {% if 'ai.' in request.endpoint %}active{% endif %}">
-                <i class="bi bi-robot"></i>
-                <span>AI Health</span>
-            </a>
-            <a href="{{ url_for('analytics.health_dashboard') }}" class="nav-item {% if 'health_dashboard' in request.endpoint %}active{% endif %}">
-                <i class="bi bi-graph-up"></i>
-                <span>Health Analytics</span>
-            </a>
-            <a href="{{ url_for('analytics.compare') }}" class="nav-item {% if 'compare' in request.endpoint %}active{% endif %}">
-                <i class="bi bi-arrow-left-right"></i>
-                <span>Compare Records</span>
-            </a>
+            <div class="nav-section">
+                <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-grid-1x2"></i></span>
+                    <span class="nav-item-text">Dashboard</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">Records</span>
+                <a href="{{ url_for('records.list') }}" class="nav-item {% if 'records' in request.endpoint and 'compare' not in request.endpoint %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-folder2-open"></i></span>
+                    <span class="nav-item-text">All Records</span>
+                </a>
+                <a href="{{ url_for('records.create') }}" class="nav-item {% if request.endpoint == 'records.create' %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-plus-circle"></i></span>
+                    <span class="nav-item-text">New Record</span>
+                </a>
+                <a href="{{ url_for('ocr.index') }}" class="nav-item {% if 'ocr' in request.endpoint %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                    <span class="nav-item-text">OCR Import</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">Analytics</span>
+                <a href="{{ url_for('analytics.health_dashboard') }}" class="nav-item {% if 'health_dashboard' in request.endpoint %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-graph-up"></i></span>
+                    <span class="nav-item-text">Health Dashboard</span>
+                </a>
+                <a href="{{ url_for('analytics.compare') }}" class="nav-item {% if 'compare' in request.endpoint %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-arrow-left-right"></i></span>
+                    <span class="nav-item-text">Compare Records</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">Intelligence</span>
+                <a href="{{ url_for('ai.index') }}" class="nav-item {% if 'ai.' in request.endpoint %}active{% endif %}">
+                    <span class="nav-item-icon"><i class="bi bi-robot"></i></span>
+                    <span class="nav-item-text">AI Health</span>
+                </a>
+            </div>
         </nav>
         
         <div class="sidebar-footer">
-            <div class="user-info">
+            <div class="sidebar-user">
                 <div class="user-avatar">
                     {{ current_user.username[0]|upper }}
                 </div>
-                <div class="user-details">
+                <div class="user-info">
                     <span class="user-name">{{ current_user.username }}</span>
                     <span class="user-email">{{ current_user.email }}</span>
                 </div>
             </div>
-            <a href="{{ url_for('auth.logout') }}" class="logout-btn" title="Logout">
-                <i class="bi bi-box-arrow-right"></i>
-            </a>
+            <div class="user-actions">
+                <a href="{{ url_for('auth.logout') }}" class="user-action-btn" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
         </div>
-    </div>
+        
+        <!-- Sidebar Toggle -->
+        <button class="sidebar-toggle" id="sidebarToggleBtn" title="Toggle sidebar">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    </aside>
     
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" id="mainContent">
         <!-- Top Header -->
-        <header class="top-header">
+        <header class="top-header-modern">
             <div class="header-left">
-                <button class="mobile-toggle" id="sidebarToggle">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="page-header-info">
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                    <span class="page-breadcrumb">{% block page_breadcrumb %}{% endblock %}</span>
+                </div>
             </div>
             <div class="header-right">
-                <span class="current-date">{{ current_date }}</span>
+                <!-- Search -->
+                <div class="search-input-wrapper">
+                    <i class="bi bi-search search-input-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search records..." id="globalSearch">
+                </div>
+                
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                    <i class="bi bi-moon-fill" id="themeIcon"></i>
+                </button>
+                
+                <!-- Date -->
+                <span class="header-date">{{ current_date }}</span>
             </div>
         </header>
         
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="flash-messages">
+                <div class="page-alerts">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'info' }}">
+                            <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-circle-fill{% elif category == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -110,33 +163,33 @@
         {% endwith %}
         
         <!-- Page Content -->
-        <main class="page-content">
+        <main class="page-container">
             {% block content %}{% endblock %}
         </main>
         
         <!-- Footer -->
-        <footer class="main-footer">
+        <footer class="main-footer-modern">
             <p>&copy; 2024 MCU Vault. Secure Medical Check-Up Management System.</p>
         </footer>
     </div>
     
     {% else %}
-    <!-- Auth Pages Layout (No Sidebar) -->
-    <div class="auth-wrapper">
+    <!-- Auth Pages Layout -->
+    <div class="auth-wrapper-modern">
         <div class="auth-brand">
-            <i class="bi bi-shield-check"></i>
+            <div class="auth-brand-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
             <span>MCU Vault</span>
         </div>
         
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="flash-messages auth-flash">
+                <div class="auth-alerts">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'info' }}">
+                            <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-circle-fill{% elif category == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -154,5 +207,79 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
+    
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+                sidebarOverlay.classList.toggle('active');
+            });
+        }
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+        
+        // Restore sidebar state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+        }
+        
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        if (themeToggle) {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+        }
+        
+        function updateThemeIcon(theme) {
+            if (themeIcon) {
+                themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            }
+        }
+        
+        // Global Search
+        const globalSearch = document.getElementById('globalSearch');
+        if (globalSearch) {
+            globalSearch.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = globalSearch.value.trim();
+                    if (query) {
+                        window.location.href = "{{ url_for('records.list') }}?search=" + encodeURIComponent(query);
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
