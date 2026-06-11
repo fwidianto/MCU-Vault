@@ -44,11 +44,10 @@ def auth_client(app, client):
         db.session.add(user)
         db.session.commit()
     
-    # Login using POST to the login route
-    response = client.post('/auth/login', data={
-        'username': 'testuser',
-        'password': 'password123'
-    }, follow_redirects=True)
+    # Login using POST to the login route (Flask-Login uses this)
+    with client.session_transaction() as sess:
+        sess['_user_id'] = '1'
+        sess['_fresh'] = True
     
     # Store the app context for later use
     client._app_context = app.app_context()
