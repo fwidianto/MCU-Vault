@@ -76,6 +76,7 @@ def create_app(config_name='default'):
     from app.routes.upload import upload_bp
     from app.routes.analytics import analytics_bp
     from app.routes.ocr import ocr_bp
+    from app.routes.ai import ai_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -83,6 +84,7 @@ def create_app(config_name='default'):
     app.register_blueprint(upload_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(ocr_bp)
+    app.register_blueprint(ai_bp)
     
     # Create database tables
     with app.app_context():

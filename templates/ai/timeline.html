@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.index') }}">
+                            <i class="bi bi-robot"></i> AI Health
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.compare') }}">
+                            <i class="bi bi-arrow-left-right"></i> Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.trends') }}">
+                            <i class="bi bi-graph-up"></i> Trends
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('ai.timeline') }}">
+                            <i class="bi bi-clock-history"></i> Timeline
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="bi bi-clock-history"></i> Health Timeline Narrative
+                </h1>
+                <a href="{{ url_for('ai.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to AI Health
+                </a>
+            </div>
+
+            <!-- AI Status -->
+            <div class="alert {% if ai_status.available %}alert-success{% else %}alert-warning{% endif %} mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-{% if ai_status.available %}check-circle{% else %}exclamation-triangle{% endif %} me-2 fs-4"></i>
+                    <div>
+                        <strong>AI Service:</strong>
+                        {% if ai_status.available %}
+                            Connected via {{ ai_status.provider }}
+                        {% else %}
+                            Not available
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if records|length >= 2 %}
+            <!-- Record Selection -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Select Records for Health Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Generate a narrative of your health journey. The AI will create a story describing changes and patterns over time.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Records</label>
+                        <div class="row">
+                            {% for record in records %}
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input record-checkbox" type="checkbox" 
+                                           value="{{ record.id }}" id="record{{ record.id }}"
+                                           data-date="{{ record.mcu_date.strftime('%Y-%m-%d') }}">
+                                    <label class="form-check-label" for="record{{ record.id }}">
+                                        {{ record.mcu_date.strftime('%b %d, %Y') }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <button onclick="generateTimeline()" class="btn btn-primary" {% if not ai_status.available %}disabled{% endif %}>
+                        <i class="bi bi-robot"></i> Generate Health Timeline
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timeline Results -->
+            <div class="card" id="timelineCard" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Your Health Journey</h5>
+                </div>
+                <div class="card-body">
+                    <div id="timelineContent" class="timeline-content">
+                        <!-- Results will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="card" id="loadingCard" style="display: none;">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Creating your health timeline narrative...</p>
+                    <p class="text-muted small">This may take a moment as we analyze your complete health history.</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="card" id="errorCard" style="display: none;">
+                <div class="card-body">
+                    <div class="alert alert-danger" id="errorMessage"></div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Not enough data:</strong> You need at least 2 MCU records to generate a timeline. 
+                You currently have {{ records|length }} record(s).
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+const csrftoken = document.querySelector('[name=csrf-token]')?.content || '';
+
+async function generateTimeline() {
+    const checkboxes = document.querySelectorAll('.record-checkbox:checked');
+    const recordIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (recordIds.length < 2) {
+        alert('Please select at least 2 records');
+        return;
+    }
+    
+    // Show loading, hide others
+    document.getElementById('timelineCard').style.display = 'none';
+    document.getElementById('errorCard').style.display = 'none';
+    document.getElementById('loadingCard').style.display = 'block';
+    
+    try {
+        const response = await fetch('/ai/health-timeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                record_ids: recordIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('loadingCard').style.display = 'none';
+        
+        if (data.success) {
+            document.getElementById('timelineContent').innerHTML = 
+                data.timeline.replace(/\n/g, '<br>');
+            document.getElementById('timelineCard').style.display = 'block';
+        } else {
+            document.getElementById('errorMessage').textContent = data.error;
+            document.getElementById('errorCard').style.display = 'block';
+        }
+    } catch (error) {
+        document.getElementById('loadingCard').style.display = 'none';
+        document.getElementById('errorMessage').textContent = 'Failed to generate timeline. Please try again.';
+        document.getElementById('errorCard').style.display = 'block';
+    }
+}
+
+// Select all by default
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.record-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+});
+</script>
+
+<style>
+.timeline-content {
+    line-height: 2;
+    font-size: 1.05rem;
+}
+.timeline-content p {
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

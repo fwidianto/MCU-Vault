@@ -35,6 +35,16 @@ MCU Vault is a secure Medical Check-Up (MCU) document management system that all
   - Bulk import for batch processing
   - Error handling for poor quality images, rotated documents, and missing values
 
+- **AI Health Intelligence (Phase 3A)**: AI-powered health insights and explanations
+  - AI Health Summary: Natural language summaries of MCU records
+  - Historical Comparison: Compare two MCU records with AI analysis
+  - Trend Analysis: Analyze health patterns over multiple years
+  - Health Timeline: Longitudinal narrative of health journey
+  - Explain Metrics: Educational explanations of health metrics
+  - AI Health Reports: Downloadable PDF reports with AI-generated insights
+  - Provider Abstraction: Supports OpenAI, Anthropic, and Local LLMs
+  - Safety First: Medical disclaimers, no diagnoses, encourages professional consultation
+
 ## Technology Stack
 
 - **Backend**: Python Flask
@@ -62,10 +72,18 @@ mcu-vault/
 │   │   ├── records.py       # MCU record CRUD routes
 │   │   ├── upload.py        # File upload routes
 │   │   ├── analytics.py     # Health analytics routes (Phase 2B)
-│   │   └── ocr.py           # OCR import routes (Phase 2C)
+│   │   ├── ocr.py           # OCR import routes (Phase 2C)
+│   │   └── ai.py            # AI health intelligence routes (Phase 3A)
 │   └── services/
 │       ├── __init__.py
 │       ├── ocr_service.py    # OCR service layer (Phase 2C)
+│       └── ocr_mapping.py   # Field mapping engine (Phase 2C)
+│   └── services/
+│       ├── __init__.py
+│       ├── ai_service.py    # AI provider abstraction (Phase 3A)
+│       ├── ai_prompts.py    # AI prompt templates (Phase 3A)
+│       ├── health_intelligence.py # Health intelligence service (Phase 3A)
+│       ├── ocr_service.py   # OCR service layer (Phase 2C)
 │       └── ocr_mapping.py   # Field mapping engine (Phase 2C)
 │   └── utils/
 │       ├── __init__.py
@@ -91,6 +109,11 @@ mcu-vault/
 │   │   ├── review.html      # OCR review screen (Phase 2C)
 │   │   ├── bulk.html        # Bulk import page (Phase 2C)
 │   │   └── bulk_progress.html # Bulk processing progress (Phase 2C)
+│   ├── ai/
+│   │   ├── index.html       # AI health main page (Phase 3A)
+│   │   ├── compare.html     # AI comparison page (Phase 3A)
+│   │   ├── trends.html      # AI trends analysis (Phase 3A)
+│   │   └── timeline.html    # AI timeline narrative (Phase 3A)
 │   ├── records/
 │   │   ├── list.html        # Records list page
 │   │   ├── detail.html      # Record detail page
@@ -104,7 +127,8 @@ mcu-vault/
 │   ├── test_health_classification.py # Health classification tests (Phase 2B)
 │   ├── test_analytics_routes.py      # Analytics routes tests (Phase 2B)
 │   ├── test_auth.py         # Authentication tests
-│   └── test_ocr.py          # OCR tests (Phase 2C)
+│   ├── test_ocr.py          # OCR tests (Phase 2C)
+│   └── test_ai_health.py    # AI health tests (Phase 3A)
 ├── .env.example             # Environment variables template
 ├── requirements.txt         # Python dependencies
 ├── run.py                   # Application entry point

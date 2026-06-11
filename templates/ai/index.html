@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.index') }}">
+                            <i class="bi bi-robot"></i> AI Health
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.compare') }}">
+                            <i class="bi bi-arrow-left-right"></i> Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.trends') }}">
+                            <i class="bi bi-graph-up"></i> Trends
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.timeline') }}">
+                            <i class="bi bi-clock-history"></i> Timeline
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="bi bi-robot"></i> AI Health Intelligence
+                </h1>
+            </div>
+
+            <!-- AI Status -->
+            <div class="alert {% if ai_status.available %}alert-success{% else %}alert-warning{% endif %} mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-{% if ai_status.available %}check-circle{% else %}exclamation-triangle{% endif %} me-2 fs-4"></i>
+                    <div>
+                        <strong>AI Service Status:</strong>
+                        {% if ai_status.available %}
+                            Connected via {{ ai_status.provider }}
+                        {% else %}
+                            Not available. Please configure an AI provider (OpenAI, Anthropic, or Local LLM).
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-file-text"></i> Health Summaries</h5>
+                            <p class="card-text">Get AI-generated summaries of your MCU records with explanations of what your health metrics mean.</p>
+                            {% if recent_records %}
+                            <div class="list-group list-group-flush mt-3">
+                                {% for record in recent_records[:3] %}
+                                <a href="#" class="list-group-item list-group-item-action" onclick="generateSummary({{ record.id }})">
+                                    {{ record.patient_name }} - {{ record.mcu_date.strftime('%b %d, %Y') }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-arrow-left-right"></i> Compare Records</h5>
+                            <p class="card-text">Compare two MCU records side-by-side with AI analysis of what changed between them.</p>
+                            <a href="{{ url_for('ai.compare') }}" class="btn btn-primary mt-3">
+                                <i class="bi bi-arrow-left-right"></i> Start Comparison
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-graph-up"></i> Trend Analysis</h5>
+                            <p class="card-text">Analyze health trends across multiple years of MCU records to understand long-term patterns.</p>
+                            <a href="{{ url_for('ai.trends') }}" class="btn btn-primary mt-3">
+                                <i class="bi bi-graph-up"></i> View Trends
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Features -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-clock-history"></i> Health Timeline</h5>
+                            <p class="card-text">Generate a narrative of your health journey over time, highlighting periods of change and stability.</p>
+                            <a href="{{ url_for('ai.timeline') }}" class="btn btn-primary mt-3">
+                                <i class="bi bi-clock-history"></i> Generate Timeline
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-file-earmark-pdf"></i> AI Health Reports</h5>
+                            <p class="card-text">Download comprehensive PDF reports combining summaries, comparisons, and trend analysis.</p>
+                            {% if recent_records %}
+                            <select id="reportRecordSelect" class="form-select mt-3">
+                                <option value="">Select a record...</option>
+                                {% for record in recent_records %}
+                                <option value="{{ record.id }}">{{ record.patient_name }} - {{ record.mcu_date.strftime('%b %d, %Y') }}</option>
+                                {% endfor %}
+                            </select>
+                            <button onclick="downloadReport()" class="btn btn-success mt-2" {% if not ai_status.available %}disabled{% endif %}>
+                                <i class="bi bi-download"></i> Download Report
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explain Metrics -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-question-circle"></i> Learn About Health Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <p>Click on any metric below to learn what it means and why it matters for your health.</p>
+                    <div class="row" id="metricsGrid">
+                        <!-- Metrics will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Modal -->
+            <div class="modal fade" id="summaryModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">AI Health Summary</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="summaryContent">
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Generating AI summary...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation Modal -->
+            <div class="modal fade" id="explainModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="explainModalTitle">Metric Explanation</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="explainContent">
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Loading explanation...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrftoken = document.querySelector('[name=csrf-token]')?.content || '';
+
+async function generateSummary(recordId) {
+    const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+    modal.show();
+    
+    try {
+        const response = await fetch(`/ai/summary/${recordId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        });
+        const data = await response.json();
+        
+        const content = document.getElementById('summaryContent');
+        if (data.success) {
+            content.innerHTML = `<div class="alert alert-info">${data.summary.replace(/\n/g, '<br>')}</div>`;
+        } else {
+            content.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    } catch (error) {
+        document.getElementById('summaryContent').innerHTML = 
+            '<div class="alert alert-danger">Failed to generate summary. Please try again.</div>';
+    }
+}
+
+async function explainMetric(metricName, metricValue = null) {
+    const modal = new bootstrap.Modal(document.getElementById('explainModal'));
+    document.getElementById('explainModalTitle').textContent = 
+        metricName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    modal.show();
+    
+    try {
+        let url = `/ai/explain/${metricName}`;
+        if (metricValue !== null) {
+            url += `?value=${metricValue}`;
+        }
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        });
+        const data = await response.json();
+        
+        const content = document.getElementById('explainContent');
+        if (data.success) {
+            content.innerHTML = `<div class="metric-explanation">${data.explanation.replace(/\n/g, '<br>')}</div>`;
+        } else {
+            content.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    } catch (error) {
+        document.getElementById('explainContent').innerHTML = 
+            '<div class="alert alert-danger">Failed to load explanation. Please try again.</div>';
+    }
+}
+
+function downloadReport() {
+    const select = document.getElementById('reportRecordSelect');
+    const recordId = select.value;
+    if (!recordId) {
+        alert('Please select a record first');
+        return;
+    }
+    window.location.href = `/ai/report/${recordId}?format=pdf`;
+}
+
+// Load metrics for explanation
+async function loadMetrics() {
+    try {
+        const response = await fetch('/ai/explain', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        });
+        const data = await response.json();
+        
+        const grid = document.getElementById('metricsGrid');
+        if (data.metrics) {
+            const metricNames = Object.keys(data.metrics);
+            metricNames.forEach(name => {
+                const info = data.metrics[name];
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-3';
+                col.innerHTML = `
+                    <button class="btn btn-outline-primary w-100 text-start" onclick="explainMetric('${name}')">
+                        <i class="bi bi-info-circle"></i> ${info.name}
+                    </button>
+                `;
+                grid.appendChild(col);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load metrics:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadMetrics);
+</script>
+
+<style>
+.metric-explanation {
+    line-height: 1.8;
+}
+.metric-explanation h2, .metric-explanation h3 {
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.index') }}">
+                            <i class="bi bi-robot"></i> AI Health
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('ai.compare') }}">
+                            <i class="bi bi-arrow-left-right"></i> Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.trends') }}">
+                            <i class="bi bi-graph-up"></i> Trends
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ai.timeline') }}">
+                            <i class="bi bi-clock-history"></i> Timeline
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="bi bi-arrow-left-right"></i> AI Historical Comparison
+                </h1>
+                <a href="{{ url_for('ai.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to AI Health
+                </a>
+            </div>
+
+            <!-- AI Status -->
+            <div class="alert {% if ai_status.available %}alert-success{% else %}alert-warning{% endif %} mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-{% if ai_status.available %}check-circle{% else %}exclamation-triangle{% endif %} me-2 fs-4"></i>
+                    <div>
+                        <strong>AI Service:</strong>
+                        {% if ai_status.available %}
+                            Connected via {{ ai_status.provider }}
+                        {% else %}
+                            Not available
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Record Selection -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Select Records to Compare</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="currentRecord" class="form-label">Current MCU (More Recent)</label>
+                            <select id="currentRecord" class="form-select">
+                                <option value="">Select current record...</option>
+                                {% for record in records %}
+                                <option value="{{ record.id }}" data-date="{{ record.mcu_date.strftime('%Y-%m-%d') }}">
+                                    {{ record.patient_name }} - {{ record.mcu_date.strftime('%b %d, %Y') }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="previousRecord" class="form-label">Previous MCU (Older)</label>
+                            <select id="previousRecord" class="form-select">
+                                <option value="">Select previous record...</option>
+                                {% for record in records %}
+                                <option value="{{ record.id }}" data-date="{{ record.mcu_date.strftime('%Y-%m-%d') }}">
+                                    {{ record.patient_name }} - {{ record.mcu_date.strftime('%b %d, %Y') }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button onclick="generateComparison()" class="btn btn-primary" {% if not ai_status.available %}disabled{% endif %}>
+                            <i class="bi bi-robot"></i> Generate AI Comparison
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Results -->
+            <div class="card" id="comparisonCard" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">AI Comparison Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div id="comparisonContent">
+                        <!-- Results will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="card" id="loadingCard" style="display: none;">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Generating comparison analysis...</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="card" id="errorCard" style="display: none;">
+                <div class="card-body">
+                    <div class="alert alert-danger" id="errorMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const csrftoken = document.querySelector('[name=csrf-token]')?.content || '';
+
+async function generateComparison() {
+    const currentId = document.getElementById('currentRecord').value;
+    const previousId = document.getElementById('previousRecord').value;
+    
+    if (!currentId || !previousId) {
+        alert('Please select both records');
+        return;
+    }
+    
+    if (currentId === previousId) {
+        alert('Please select two different records');
+        return;
+    }
+    
+    // Show loading, hide others
+    document.getElementById('comparisonCard').style.display = 'none';
+    document.getElementById('errorCard').style.display = 'none';
+    document.getElementById('loadingCard').style.display = 'block';
+    
+    try {
+        const response = await fetch('/ai/comparison', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                current_id: parseInt(currentId),
+                previous_id: parseInt(previousId)
+            })
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('loadingCard').style.display = 'none';
+        
+        if (data.success) {
+            document.getElementById('comparisonContent').innerHTML = 
+                `<div class="ai-content">${data.comparison.replace(/\n/g, '<br>')}</div>`;
+            document.getElementById('comparisonCard').style.display = 'block';
+        } else {
+            document.getElementById('errorMessage').textContent = data.error;
+            document.getElementById('errorCard').style.display = 'block';
+        }
+    } catch (error) {
+        document.getElementById('loadingCard').style.display = 'none';
+        document.getElementById('errorMessage').textContent = 'Failed to generate comparison. Please try again.';
+        document.getElementById('errorCard').style.display = 'block';
+    }
+}
+
+// Auto-select previous record based on current selection
+document.getElementById('currentRecord').addEventListener('change', function() {
+    const currentSelect = this;
+    const previousSelect = document.getElementById('previousRecord');
+    const currentOption = currentSelect.options[currentSelect.selectedIndex];
+    
+    if (currentOption.value) {
+        const currentDate = new Date(currentOption.dataset.date);
+        
+        // Find the most recent previous record
+        let bestPrevious = null;
+        let bestPreviousDate = null;
+        
+        for (let i = 0; i < previousSelect.options.length; i++) {
+            const option = previousSelect.options[i];
+            if (option.value && option.value !== currentSelect.value) {
+                const optionDate = new Date(option.dataset.date);
+                if (optionDate < currentDate) {
+                    if (!bestPreviousDate || optionDate > bestPreviousDate) {
+                        bestPrevious = option;
+                        bestPreviousDate = optionDate;
+                    }
+                }
+            }
+        }
+        
+        if (bestPrevious) {
+            previousSelect.value = bestPrevious.value;
+        }
+    }
+});
+</script>
+
+<style>
+.ai-content {
+    line-height: 1.8;
+}
+</style>
+{% endblock %}
