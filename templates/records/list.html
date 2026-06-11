@@ -1,28 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}MCU Records - MCU Vault{% endblock %}
-{% block page_title %}MCU Records{% endblock %}
+{% block title %}All Records - MCU Vault{% endblock %}
+{% block page_title %}Records{% endblock %}
 
 {% block content %}
-<!-- Search and Filter Bar -->
-<div class="search-bar">
-    <form method="GET" action="{{ url_for('records.list') }}" class="search-form">
-        <div class="search-row">
-            <div class="search-input-group">
-                <i class="bi bi-search"></i>
+<!-- Header -->
+<div class="flex items-center justify-between" style="margin-bottom: var(--space-6);">
+    <div>
+        <p class="page-subtitle">
+            {% if search or status_filter %}
+                {{ pagination.total }} result{{ 's' if pagination.total != 1 else '' }} found
+            {% else %}
+                {{ pagination.total }} total records
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus"></i>
+        New Record
+    </a>
+</div>
+
+<!-- Search & Filter -->
+<div class="card" style="margin-bottom: var(--space-5);">
+    <div class="card-body" style="padding: var(--space-4);">
+        <form method="GET" action="{{ url_for('records.list') }}" class="flex gap-3" style="flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 200px;">
                 <input type="text" 
                        name="search" 
+                       class="form-input" 
                        placeholder="Search records..." 
                        value="{{ search }}">
             </div>
             
-            <select name="search_by" class="form-select search-select">
+            <select name="search_by" class="form-select" style="width: auto;">
                 <option value="patient_name" {% if search_by == 'patient_name' %}selected{% endif %}>Patient Name</option>
                 <option value="company" {% if search_by == 'company' %}selected{% endif %}>Company</option>
                 <option value="mcu_date" {% if search_by == 'mcu_date' %}selected{% endif %}>MCU Date</option>
             </select>
             
-            <select name="status" class="form-select status-select">
+            <select name="status" class="form-select" style="width: auto;">
                 <option value="">All Status</option>
                 <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
                 <option value="cleared" {% if status_filter == 'cleared' %}selected{% endif %}>Cleared</option>
@@ -31,204 +48,85 @@
             </select>
             
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i>
             </button>
             
-            <a href="{{ url_for('records.list') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-x-circle"></i> Clear
+            {% if search or status_filter %}
+            <a href="{{ url_for('records.list') }}" class="btn btn-ghost">
+                Clear
             </a>
-        </div>
-    </form>
+            {% endif %}
+        </form>
+    </div>
 </div>
 
 <!-- Records List -->
-<div class="records-container">
-    <div class="records-header">
-        <h5>
-            <i class="bi bi-list-ul"></i> 
-            {% if search or status_filter %}
-                Search Results ({{ pagination.total }})
-            {% else %}
-                All Records ({{ pagination.total }})
-            {% endif %}
-        </h5>
-        <a href="{{ url_for('records.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> New Record
-        </a>
-    </div>
-    
-    {% if records %}
-    <div class="table-responsive">
-        <table class="records-table">
-            <thead>
-                <tr>
-                    <th>
-                        <a href="?sort=patient_name&order={% if sort_by == 'patient_name' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                            Patient Name
-                            {% if sort_by == 'patient_name' %}
-                                <i class="bi bi-caret-{% if sort_order == 'asc' %}up{% else %}down{% endif %}-fill"></i>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th>
-                        <a href="?sort=company&order={% if sort_by == 'company' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                            Company
-                            {% if sort_by == 'company' %}
-                                <i class="bi bi-caret-{% if sort_order == 'asc' %}up{% else %}down{% endif %}-fill"></i>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th>
-                        <a href="?sort=mcu_date&order={% if sort_by == 'mcu_date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                            MCU Date
-                            {% if sort_by == 'mcu_date' %}
-                                <i class="bi bi-caret-{% if sort_order == 'asc' %}up{% else %}down{% endif %}-fill"></i>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th>Status</th>
-                    <th>Files</th>
-                    <th>
-                        <a href="?sort=created_at&order={% if sort_by == 'created_at' and sort_order == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                            Created
-                            {% if sort_by == 'created_at' %}
-                                <i class="bi bi-caret-{% if sort_order == 'asc' %}up{% else %}down{% endif %}-fill"></i>
-                            {% endif %}
-                        </a>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in records %}
-                <tr>
-                    <td>
-                        <strong>{{ record.patient_name }}</strong>
-                    </td>
-                    <td>{{ record.company or '-' }}</td>
-                    <td>{{ record.mcu_date.strftime('%B %d, %Y') if record.mcu_date else '-' }}</td>
-                    <td>
-                        <span class="badge {{ record.status_badge_class }}">
-                            {{ record.status|title }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="files-count">
-                            <i class="bi bi-paperclip"></i> {{ record.total_files }}
-                        </span>
-                    </td>
-                    <td>
-                        <small>{{ record.created_at.strftime('%b %d, %Y') if record.created_at else '-' }}</small>
-                    </td>
-                    <td class="actions-cell">
-                        <a href="{{ url_for('records.detail', record_id=record.id) }}" class="action-btn view" title="View">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="{{ url_for('records.edit', record_id=record.id) }}" class="action-btn edit" title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button onclick="confirmDelete({{ record.id }}, '{{ record.patient_name }}')" class="action-btn delete" title="Delete">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Pagination -->
-    {% if pagination.pages > 1 %}
-    <nav class="pagination-nav">
-        <ul class="pagination">
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        {% if records %}
+        <div class="record-list">
+            {% for record in records %}
+            <a href="{{ url_for('records.detail', record_id=record.id) }}" class="record-row" style="text-decoration: none;">
+                <div class="record-info">
+                    <div class="record-name">{{ record.patient_name }}</div>
+                    <div class="record-meta">
+                        {{ record.company or 'No company' }}
+                        {% if record.mcu_date %}
+                        · {{ record.mcu_date.strftime('%b %d, %Y') }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="record-status">
+                    <span class="badge badge-{{ 'success' if record.status == 'Cleared' else 'warning' if record.status == 'Pending' else 'danger' }}">
+                        {{ record.status }}
+                    </span>
+                </div>
+                <div style="color: var(--text-tertiary);">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <div style="padding: var(--space-4); border-top: 1px solid var(--border-default); display: flex; justify-content: center; gap: var(--space-2);">
             {% if pagination.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('records.list', page=pagination.prev_num, search=search, search_by=search_by, status=status_filter, sort=sort_by, order=sort_order) }}">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
+            <a href="{{ url_for('records.list', page=pagination.prev_num, search=search, status=status_filter) }}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-chevron-left"></i>
+            </a>
             {% endif %}
             
-            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if page_num == pagination.page %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ page_num }}</span>
-                    </li>
-                    {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('records.list', page=page_num, search=search, search_by=search_by, status=status_filter, sort=sort_by, order=sort_order) }}">{{ page_num }}</a>
-                    </li>
-                    {% endif %}
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                </li>
-                {% endif %}
-            {% endfor %}
+            <span class="btn btn-ghost btn-sm" style="cursor: default;">
+                Page {{ pagination.page }} of {{ pagination.pages }}
+            </span>
             
             {% if pagination.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('records.list', page=pagination.next_num, search=search, search_by=search_by, status=status_filter, sort=sort_by, order=sort_order) }}">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
+            <a href="{{ url_for('records.list', page=pagination.next_num, search=search, status=status_filter) }}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-chevron-right"></i>
+            </a>
             {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-    
-    {% else %}
-    <div class="empty-state">
-        <i class="bi bi-folder2-open"></i>
-        <h5>No Records Found</h5>
-        {% if search or status_filter %}
-        <p>No records match your search criteria.</p>
-        <a href="{{ url_for('records.list') }}" class="btn btn-outline-primary">Clear Filters</a>
+        </div>
+        {% endif %}
+        
         {% else %}
-        <p>Start by creating your first MCU record.</p>
-        <a href="{{ url_for('records.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Create First Record
-        </a>
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-folder2-open"></i>
+            </div>
+            <div class="empty-state-title">No records found</div>
+            <div class="empty-state-text">
+                {% if search or status_filter %}
+                Try adjusting your search or filters
+                {% else %}
+                Create your first medical check-up record
+                {% endif %}
+            </div>
+            <a href="{{ url_for('records.create') }}" class="btn btn-primary">
+                Create Record
+            </a>
+        </div>
         {% endif %}
     </div>
-    {% endif %}
 </div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle text-danger"></i> Confirm Delete
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the record for <strong id="deletePatientName"></strong>?</p>
-                <p class="text-muted small">This action cannot be undone. All associated files will also be deleted.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Delete Record
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function confirmDelete(recordId, patientName) {
-    document.getElementById('deletePatientName').textContent = patientName;
-    document.getElementById('deleteForm').action = '/records/' + recordId + '/delete';
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
 {% endblock %}

@@ -1,88 +1,168 @@
 {% extends "base.html" %}
 
 {% block title %}OCR Import - MCU Vault{% endblock %}
-
 {% block page_title %}OCR Import{% endblock %}
 
 {% block content %}
-<div class="ocr-upload-container">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="bi bi-file-earmark-text"></i> Upload MCU Report</h4>
+<div style="max-width: 640px;">
+    <!-- Upload Zone -->
+    <div class="card" style="margin-bottom: var(--space-6);">
+        <div class="card-body" style="padding: var(--space-6);">
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                <div class="upload-zone-icon">
+                    <i class="bi bi-cloud-arrow-up"></i>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted">
-                        Upload your MCU (Medical Check-Up) report to automatically extract health metrics.
-                        Supported formats: PDF, JPG, JPEG, PNG.
-                    </p>
-                    
-                    <form action="{{ url_for('ocr.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="mb-4">
-                            <label for="file" class="form-label">
-                                <i class="bi bi-cloud-upload"></i> Select File(s)
-                            </label>
-                            <input type="file" class="form-control" id="file" name="file" 
-                                   accept=".pdf,.jpg,.jpeg,.png" required>
-                            <div class="form-text">
-                                You can upload one or more MCU reports at once.
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('records.list') }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="uploadBtn">
-                                <i class="bi bi-upload"></i> Upload & Extract
-                            </button>
-                        </div>
-                    </form>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('ocr.bulk') }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-collection"></i> Bulk Import
-                                </a>
-                            </div>
-                            <p class="text-muted small mt-2">
-                                Import multiple files at once for batch processing.
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{{ url_for('records.create') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-pencil-square"></i> Manual Entry
-                                </a>
-                            </div>
-                            <p class="text-muted small mt-2">
-                                Enter health data manually without uploading a document.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <div class="upload-zone-title">Drop files here or click to upload</div>
+                <div class="upload-zone-text">Supports PDF, JPG, PNG up to 10MB</div>
             </div>
             
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5><i class="bi bi-info-circle"></i> How it works</h5>
+            <form action="{{ url_for('ocr.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm" style="margin-top: var(--space-5);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="file_path" id="filePath">
+                
+                <div id="selectedFile" style="display: none; margin-bottom: var(--space-4);">
+                    <div style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                        <i class="bi bi-file-earmark" style="font-size: 24px; color: var(--text-tertiary);"></i>
+                        <div style="flex: 1;">
+                            <div id="fileName" style="font-size: var(--font-size-sm); font-weight: 500;"></div>
+                            <div id="fileSize" style="font-size: var(--font-size-xs); color: var(--text-tertiary);"></div>
+                        </div>
+                        <button type="button" onclick="clearFile()" style="background: none; border: none; color: var(--text-tertiary); cursor: pointer;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ol class="mb-0">
-                        <li><strong>Upload</strong> - Select your MCU report file (PDF or image)</li>
-                        <li><strong>Extract</strong> - Our OCR system extracts text and health data</li>
-                        <li><strong>Review</strong> - Review and correct extracted values</li>
-                        <li><strong>Confirm</strong> - User confirms before saving to database</li>
-                        <li><strong>Save</strong> - MCU record is created with all health metrics</li>
-                    </ol>
+                
+                <div class="flex gap-2" style="justify-content: flex-end;">
+                    <a href="{{ url_for('records.list') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                        <i class="bi bi-upload"></i>
+                        Upload & Extract
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: var(--space-6);">
+        <a href="{{ url_for('ocr.bulk') }}" class="card" style="padding: var(--space-4); text-align: center; text-decoration: none;">
+            <i class="bi bi-collection" style="font-size: 24px; margin-bottom: var(--space-2);"></i>
+            <div style="font-size: var(--font-size-sm); font-weight: 500;">Bulk Import</div>
+            <div style="font-size: var(--font-size-xs); color: var(--text-tertiary);">Multiple files</div>
+        </a>
+        <a href="{{ url_for('records.create') }}" class="card" style="padding: var(--space-4); text-align: center; text-decoration: none;">
+            <i class="bi bi-pencil-square" style="font-size: 24px; margin-bottom: var(--space-2);"></i>
+            <div style="font-size: var(--font-size-sm); font-weight: 500;">Manual Entry</div>
+            <div style="font-size: var(--font-size-xs); color: var(--text-tertiary);">Type data</div>
+        </a>
+    </div>
+    
+    <!-- How it Works -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">How it works</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div style="display: flex; gap: var(--space-4); padding: var(--space-4); border-bottom: 1px solid var(--border-default);">
+                <div style="width: 28px; height: 28px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 600; flex-shrink: 0;">1</div>
+                <div>
+                    <div style="font-size: var(--font-size-sm); font-weight: 500; margin-bottom: 2px;">Upload</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">Select your MCU report file</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: var(--space-4); padding: var(--space-4); border-bottom: 1px solid var(--border-default);">
+                <div style="width: 28px; height: 28px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 600; flex-shrink: 0;">2</div>
+                <div>
+                    <div style="font-size: var(--font-size-sm); font-weight: 500; margin-bottom: 2px;">Extract</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">OCR extracts text and health data</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: var(--space-4); padding: var(--space-4); border-bottom: 1px solid var(--border-default);">
+                <div style="width: 28px; height: 28px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 600; flex-shrink: 0;">3</div>
+                <div>
+                    <div style="font-size: var(--font-size-sm); font-weight: 500; margin-bottom: 2px;">Review</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">Check and correct extracted values</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: var(--space-4); padding: var(--space-4);">
+                <div style="width: 28px; height: 28px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 600; flex-shrink: 0;">4</div>
+                <div>
+                    <div style="font-size: var(--font-size-sm); font-weight: 500; margin-bottom: 2px;">Save</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--text-secondary);">Confirm and create the record</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const selectedFile = document.getElementById('selectedFile');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const uploadBtn = document.getElementById('uploadBtn');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        handleFileSelect(e.target.files[0]);
+    }
+});
+
+function handleFileSelect(file) {
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+    selectedFile.style.display = 'block';
+    uploadBtn.disabled = false;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/ocr/temp-upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('filePath').value = data.path;
+    });
+}
+
+function clearFile() {
+    fileInput.value = '';
+    selectedFile.style.display = 'none';
+    uploadBtn.disabled = true;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+</script>
 {% endblock %}

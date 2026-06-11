@@ -1,288 +1,191 @@
 {% extends "base.html" %}
 
-{% block title %}New MCU Record - MCU Vault{% endblock %}
-{% block page_title %}New MCU Record{% endblock %}
+{% block title %}New Record - MCU Vault{% endblock %}
+{% block page_title %}New Record{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb-nav">
-        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
-        <i class="bi bi-chevron-right"></i>
-        <a href="{{ url_for('records.list') }}">Records</a>
-        <i class="bi bi-chevron-right"></i>
-        <span>New Record</span>
-    </nav>
+<form method="POST" action="{{ url_for('records.create') }}" style="max-width: 900px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
-    <div class="form-card">
-        <div class="form-card-header">
-            <i class="bi bi-file-earmark-medical"></i>
-            <h4>Create New MCU Record</h4>
+    <!-- Patient Info -->
+    <div class="card" style="margin-bottom: var(--space-5);">
+        <div class="card-header">
+            <span class="card-title">Patient Information</span>
         </div>
-        
-        <form method="POST" action="{{ url_for('records.create') }}" class="mcu-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-section">
-                <h5 class="section-title">
-                    <i class="bi bi-person-badge"></i> Patient Information
-                </h5>
-                
+        <div class="card-body">
+            <div class="form-row">
                 <div class="form-group">
-                    <label for="patient_name" class="form-label required">
-                        <i class="bi bi-person"></i> Patient Name
-                    </label>
-                    <input type="text" 
-                           class="form-control" 
-                           id="patient_name" 
-                           name="patient_name" 
-                           placeholder="Enter patient's full name"
-                           value="{{ patient_name or '' }}"
-                           maxlength="200"
-                           required
-                           autofocus>
+                    <label for="patient_name" class="form-label">Patient Name</label>
+                    <input type="text" class="form-input" id="patient_name" name="patient_name"
+                           placeholder="Full name" value="{{ patient_name or '' }}" required autofocus>
                 </div>
-                
                 <div class="form-group">
-                    <label for="company" class="form-label">
-                        <i class="bi bi-building"></i> Company
-                    </label>
-                    <input type="text" 
-                           class="form-control" 
-                           id="company" 
-                           name="company" 
-                           placeholder="Enter company name (optional)"
-                           value="{{ company or '' }}"
-                           maxlength="200">
+                    <label for="company" class="form-label">Company</label>
+                    <input type="text" class="form-input" id="company" name="company"
+                           placeholder="Company name (optional)" value="{{ company or '' }}">
                 </div>
             </div>
-            
-            <div class="form-section">
-                <h5 class="section-title">
-                    <i class="bi bi-clipboard2-pulse"></i> Medical Check-Up Details
-                </h5>
-                
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="mcu_date" class="form-label required">
-                            <i class="bi bi-calendar-event"></i> MCU Date
-                        </label>
-                        <input type="date" 
-                               class="form-control" 
-                               id="mcu_date" 
-                               name="mcu_date" 
-                               value="{{ mcu_date or '' }}"
-                               required>
-                    </div>
-                    
-                    <div class="form-group col-md-6">
-                        <label for="status" class="form-label">
-                            <i class="bi bi-info-circle"></i> Status
-                        </label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
-                            <option value="cleared" {% if status == 'cleared' %}selected{% endif %}>Cleared</option>
-                            <option value="not-cleared" {% if status == 'not-cleared' %}selected{% endif %}>Not Cleared</option>
-                            <option value="needs-follow-up" {% if status == 'needs-follow-up' %}selected{% endif %}>Needs Follow Up</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="notes" class="form-label">
-                        <i class="bi bi-card-text"></i> Notes
-                    </label>
-                    <textarea class="form-control" 
-                              id="notes" 
-                              name="notes" 
-                              rows="4" 
-                              placeholder="Enter any additional notes or observations (optional)">{{ notes or '' }}</textarea>
-                </div>
-            </div>
-            
-            <!-- Health Metrics Section -->
-            <div class="form-section">
-                <h5 class="section-title">
-                    <i class="bi bi-heart-pulse"></i> Health Metrics
-                    <span class="section-badge">Optional</span>
-                </h5>
-                <p class="section-description">Enter structured health measurements (all fields optional)</p>
-                
-                <!-- Basic Measurements -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-rulers"></i> Basic Measurements</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-4">
-                            <label for="height_cm" class="form-label">Height (cm)</label>
-                            <input type="number" step="0.1" min="50" max="250" 
-                                   class="form-control" id="height_cm" name="height_cm"
-                                   value="{{ health_data.get('height_cm', '') or '' }}"
-                                   placeholder="e.g., 170">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="weight_kg" class="form-label">Weight (kg)</label>
-                            <input type="number" step="0.1" min="1" max="500" 
-                                   class="form-control" id="weight_kg" name="weight_kg"
-                                   value="{{ health_data.get('weight_kg', '') or '' }}"
-                                   placeholder="e.g., 65.5">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="bmi" class="form-label">BMI</label>
-                            <input type="number" step="0.1" min="5" max="100" 
-                                   class="form-control" id="bmi" name="bmi"
-                                   value="{{ health_data.get('bmi', '') or '' }}"
-                                   placeholder="Auto-calculated or manual">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Vital Signs -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-activity"></i> Vital Signs</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-4">
-                            <label for="systolic_bp" class="form-label">Systolic BP (mmHg)</label>
-                            <input type="number" min="0" max="300" 
-                                   class="form-control" id="systolic_bp" name="systolic_bp"
-                                   value="{{ health_data.get('systolic_bp', '') or '' }}"
-                                   placeholder="e.g., 120">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="diastolic_bp" class="form-label">Diastolic BP (mmHg)</label>
-                            <input type="number" min="0" max="200" 
-                                   class="form-control" id="diastolic_bp" name="diastolic_bp"
-                                   value="{{ health_data.get('diastolic_bp', '') or '' }}"
-                                   placeholder="e.g., 80">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="heart_rate" class="form-label">Heart Rate (bpm)</label>
-                            <input type="number" min="0" max="250" 
-                                   class="form-control" id="heart_rate" name="heart_rate"
-                                   value="{{ health_data.get('heart_rate', '') or '' }}"
-                                   placeholder="e.g., 72">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Blood Sugar -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-droplet"></i> Blood Sugar</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="fasting_glucose" class="form-label">Fasting Glucose (mg/dL)</label>
-                            <input type="number" step="0.1" min="0" max="600" 
-                                   class="form-control" id="fasting_glucose" name="fasting_glucose"
-                                   value="{{ health_data.get('fasting_glucose', '') or '' }}"
-                                   placeholder="e.g., 100">
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="hba1c" class="form-label">HbA1c (%)</label>
-                            <input type="number" step="0.1" min="0" max="20" 
-                                   class="form-control" id="hba1c" name="hba1c"
-                                   value="{{ health_data.get('hba1c', '') or '' }}"
-                                   placeholder="e.g., 5.5">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Lipid Profile -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-droplet-half"></i> Lipid Profile</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="total_cholesterol" class="form-label">Total Cholesterol</label>
-                            <input type="number" step="0.1" min="0" max="600" 
-                                   class="form-control" id="total_cholesterol" name="total_cholesterol"
-                                   value="{{ health_data.get('total_cholesterol', '') or '' }}"
-                                   placeholder="mg/dL">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="ldl" class="form-label">LDL (Bad Cholesterol)</label>
-                            <input type="number" step="0.1" min="0" max="400" 
-                                   class="form-control" id="ldl" name="ldl"
-                                   value="{{ health_data.get('ldl', '') or '' }}"
-                                   placeholder="mg/dL">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="hdl" class="form-label">HDL (Good Cholesterol)</label>
-                            <input type="number" step="0.1" min="0" max="150" 
-                                   class="form-control" id="hdl" name="hdl"
-                                   value="{{ health_data.get('hdl', '') or '' }}"
-                                   placeholder="mg/dL">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="triglycerides" class="form-label">Triglycerides</label>
-                            <input type="number" step="0.1" min="0" max="1000" 
-                                   class="form-control" id="triglycerides" name="triglycerides"
-                                   value="{{ health_data.get('triglycerides', '') or '' }}"
-                                   placeholder="mg/dL">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Liver Function -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-virus"></i> Liver Function</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="sgot" class="form-label">SGOT/AST (U/L)</label>
-                            <input type="number" step="0.1" min="0" max="500" 
-                                   class="form-control" id="sgot" name="sgot"
-                                   value="{{ health_data.get('sgot', '') or '' }}"
-                                   placeholder="e.g., 25">
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="sgpt" class="form-label">SGPT/ALT (U/L)</label>
-                            <input type="number" step="0.1" min="0" max="500" 
-                                   class="form-control" id="sgpt" name="sgpt"
-                                   value="{{ health_data.get('sgpt', '') or '' }}"
-                                   placeholder="e.g., 30">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Kidney Function -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-droplet-fill"></i> Kidney Function</h6>
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="creatinine" class="form-label">Creatinine (mg/dL)</label>
-                            <input type="number" step="0.01" min="0" max="20" 
-                                   class="form-control" id="creatinine" name="creatinine"
-                                   value="{{ health_data.get('creatinine', '') or '' }}"
-                                   placeholder="e.g., 1.0">
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="uric_acid" class="form-label">Uric Acid (mg/dL)</label>
-                            <input type="number" step="0.1" min="0" max="20" 
-                                   class="form-control" id="uric_acid" name="uric_acid"
-                                   value="{{ health_data.get('uric_acid', '') or '' }}"
-                                   placeholder="e.g., 5.5">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Doctor Notes -->
-                <div class="metric-group">
-                    <h6 class="metric-group-title"><i class="bi bi-journal-medical"></i> Doctor's Notes</h6>
-                    <div class="form-group">
-                        <textarea class="form-control" 
-                                  id="doctor_notes" 
-                                  name="doctor_notes" 
-                                  rows="3" 
-                                  placeholder="Enter any medical observations, recommendations, or follow-up instructions">{{ doctor_notes or '' }}</textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <a href="{{ url_for('records.list') }}" class="btn btn-secondary">
-                    <i class="bi bi-x-circle"></i> Cancel
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle"></i> Create Record
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+    
+    <!-- Check-up Details -->
+    <div class="card" style="margin-bottom: var(--space-5);">
+        <div class="card-header">
+            <span class="card-title">Check-up Details</span>
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mcu_date" class="form-label">MCU Date</label>
+                    <input type="date" class="form-input" id="mcu_date" name="mcu_date"
+                           value="{{ mcu_date or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="cleared" {% if status == 'cleared' %}selected{% endif %}>Cleared</option>
+                        <option value="not-cleared" {% if status == 'not-cleared' %}selected{% endif %}>Not Cleared</option>
+                        <option value="needs-follow-up" {% if status == 'needs-follow-up' %}selected{% endif %}>Needs Follow Up</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-input form-textarea" id="notes" name="notes" rows="3"
+                          placeholder="Additional observations">{{ notes or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Health Metrics -->
+    <div class="card" style="margin-bottom: var(--space-5);">
+        <div class="card-header">
+            <span class="card-title">Health Metrics</span>
+            <span style="font-size: var(--font-size-xs); color: var(--text-tertiary); font-weight: 400;">Optional</span>
+        </div>
+        <div class="card-body">
+            <!-- Basic Measurements -->
+            <div class="form-section-title">Basic Measurements</div>
+            <div class="form-row" style="margin-bottom: var(--space-4);">
+                <div class="form-group">
+                    <label for="height_cm" class="form-label">Height (cm)</label>
+                    <input type="number" step="0.1" class="form-input" id="height_cm" name="height_cm"
+                           value="{{ health_data.get('height_cm', '') or '' }}" placeholder="170">
+                </div>
+                <div class="form-group">
+                    <label for="weight_kg" class="form-label">Weight (kg)</label>
+                    <input type="number" step="0.1" class="form-input" id="weight_kg" name="weight_kg"
+                           value="{{ health_data.get('weight_kg', '') or '' }}" placeholder="65.5">
+                </div>
+                <div class="form-group">
+                    <label for="bmi" class="form-label">BMI</label>
+                    <input type="number" step="0.1" class="form-input" id="bmi" name="bmi"
+                           value="{{ health_data.get('bmi', '') or '' }}" placeholder="22.5">
+                </div>
+            </div>
+            
+            <!-- Vital Signs -->
+            <div class="form-section-title">Vital Signs</div>
+            <div class="form-row" style="margin-bottom: var(--space-4);">
+                <div class="form-group">
+                    <label for="systolic_bp" class="form-label">Systolic BP</label>
+                    <input type="number" class="form-input" id="systolic_bp" name="systolic_bp"
+                           value="{{ health_data.get('systolic_bp', '') or '' }}" placeholder="120">
+                </div>
+                <div class="form-group">
+                    <label for="diastolic_bp" class="form-label">Diastolic BP</label>
+                    <input type="number" class="form-input" id="diastolic_bp" name="diastolic_bp"
+                           value="{{ health_data.get('diastolic_bp', '') or '' }}" placeholder="80">
+                </div>
+                <div class="form-group">
+                    <label for="heart_rate" class="form-label">Heart Rate (bpm)</label>
+                    <input type="number" class="form-input" id="heart_rate" name="heart_rate"
+                           value="{{ health_data.get('heart_rate', '') or '' }}" placeholder="72">
+                </div>
+            </div>
+            
+            <!-- Blood Sugar -->
+            <div class="form-section-title">Blood Sugar</div>
+            <div class="form-row" style="margin-bottom: var(--space-4);">
+                <div class="form-group">
+                    <label for="fasting_glucose" class="form-label">Fasting Glucose (mg/dL)</label>
+                    <input type="number" step="0.1" class="form-input" id="fasting_glucose" name="fasting_glucose"
+                           value="{{ health_data.get('fasting_glucose', '') or '' }}" placeholder="100">
+                </div>
+                <div class="form-group">
+                    <label for="hba1c" class="form-label">HbA1c (%)</label>
+                    <input type="number" step="0.1" class="form-input" id="hba1c" name="hba1c"
+                           value="{{ health_data.get('hba1c', '') or '' }}" placeholder="5.5">
+                </div>
+            </div>
+            
+            <!-- Lipid Profile -->
+            <div class="form-section-title">Lipid Profile</div>
+            <div class="form-row" style="margin-bottom: var(--space-4);">
+                <div class="form-group">
+                    <label for="total_cholesterol" class="form-label">Total Cholesterol</label>
+                    <input type="number" step="0.1" class="form-input" id="total_cholesterol" name="total_cholesterol"
+                           value="{{ health_data.get('total_cholesterol', '') or '' }}" placeholder="180">
+                </div>
+                <div class="form-group">
+                    <label for="ldl" class="form-label">LDL</label>
+                    <input type="number" step="0.1" class="form-input" id="ldl" name="ldl"
+                           value="{{ health_data.get('ldl', '') or '' }}" placeholder="100">
+                </div>
+                <div class="form-group">
+                    <label for="hdl" class="form-label">HDL</label>
+                    <input type="number" step="0.1" class="form-input" id="hdl" name="hdl"
+                           value="{{ health_data.get('hdl', '') or '' }}" placeholder="55">
+                </div>
+                <div class="form-group">
+                    <label for="triglycerides" class="form-label">Triglycerides</label>
+                    <input type="number" step="0.1" class="form-input" id="triglycerides" name="triglycerides"
+                           value="{{ health_data.get('triglycerides', '') or '' }}" placeholder="150">
+                </div>
+            </div>
+            
+            <!-- Liver & Kidney -->
+            <div class="form-section-title">Liver & Kidney Function</div>
+            <div class="form-row" style="margin-bottom: var(--space-4);">
+                <div class="form-group">
+                    <label for="sgot" class="form-label">SGOT/AST (U/L)</label>
+                    <input type="number" step="0.1" class="form-input" id="sgot" name="sgot"
+                           value="{{ health_data.get('sgot', '') or '' }}" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label for="sgpt" class="form-label">SGPT/ALT (U/L)</label>
+                    <input type="number" step="0.1" class="form-input" id="sgpt" name="sgpt"
+                           value="{{ health_data.get('sgpt', '') or '' }}" placeholder="30">
+                </div>
+                <div class="form-group">
+                    <label for="creatinine" class="form-label">Creatinine (mg/dL)</label>
+                    <input type="number" step="0.01" class="form-input" id="creatinine" name="creatinine"
+                           value="{{ health_data.get('creatinine', '') or '' }}" placeholder="1.0">
+                </div>
+                <div class="form-group">
+                    <label for="uric_acid" class="form-label">Uric Acid (mg/dL)</label>
+                    <input type="number" step="0.1" class="form-input" id="uric_acid" name="uric_acid"
+                           value="{{ health_data.get('uric_acid', '') or '' }}" placeholder="5.5">
+                </div>
+            </div>
+            
+            <!-- Doctor Notes -->
+            <div class="form-group">
+                <label for="doctor_notes" class="form-label">Doctor's Notes</label>
+                <textarea class="form-input form-textarea" id="doctor_notes" name="doctor_notes" rows="3"
+                          placeholder="Recommendations or follow-up instructions">{{ doctor_notes or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="flex gap-3" style="justify-content: flex-end;">
+        <a href="{{ url_for('records.list') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check"></i>
+            Create Record
+        </button>
+    </div>
+</form>
 {% endblock %}
