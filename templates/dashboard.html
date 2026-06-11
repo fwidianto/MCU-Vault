@@ -2,450 +2,135 @@
 
 {% block title %}Dashboard - MCU Vault{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
-{% block page_breadcrumb %}Overview{% endblock %}
 
 {% block content %}
-<!-- KPI Cards -->
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-icon primary">
-            <i class="bi bi-folder2-open"></i>
-        </div>
-        <div class="kpi-content">
-            <span class="kpi-label">Total Records</span>
-            <span class="kpi-value">{{ total_records }}</span>
-        </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title-xl">Good {{ time_of_day }}, {{ current_user.username }}</h1>
+    <p class="page-subtitle">Here's an overview of your health records</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Records</div>
+        <div class="stat-value">{{ total_records }}</div>
     </div>
-    
-    <div class="kpi-card">
-        <div class="kpi-icon info">
-            <i class="bi bi-paperclip"></i>
-        </div>
-        <div class="kpi-content">
-            <span class="kpi-label">Uploaded Files</span>
-            <span class="kpi-value">{{ total_files }}</span>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value">{{ records_this_month }}</div>
     </div>
-    
-    <div class="kpi-card">
-        <div class="kpi-icon success">
-            <i class="bi bi-calendar-check"></i>
-        </div>
-        <div class="kpi-content">
-            <span class="kpi-label">This Month</span>
-            <span class="kpi-value">{{ records_this_month }}</span>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Last 7 Days</div>
+        <div class="stat-value">{{ records_last_week }}</div>
     </div>
-    
-    <div class="kpi-card">
-        <div class="kpi-icon warning">
-            <i class="bi bi-clock"></i>
-        </div>
-        <div class="kpi-content">
-            <span class="kpi-label">Last 7 Days</span>
-            <span class="kpi-value">{{ records_last_week }}</span>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Uploaded Files</div>
+        <div class="stat-value">{{ total_files }}</div>
     </div>
 </div>
 
-<!-- Health Status Section -->
-{% if latest_metrics and latest_classifications %}
-<div class="card mb-6">
-    <div class="card-header">
-        <div class="card-header-title">
-            <i class="bi bi-heart-pulse"></i>
-            <span>Latest Health Snapshot</span>
-        </div>
-        <a href="{{ url_for('analytics.health_dashboard') }}" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-graph-up"></i> View Analytics
-        </a>
-    </div>
-    <div class="card-body">
-        <div class="health-metrics-grid">
-            <!-- BMI -->
-            <div class="health-metric-card">
-                <div class="health-metric-icon">
-                    <i class="bi bi-person-bounding-box"></i>
-                </div>
-                <div class="health-metric-content">
-                    <span class="health-metric-label">BMI</span>
-                    <span class="health-metric-value">
-                        {% if latest_metrics.bmi %}{{ latest_metrics.bmi }}{% else %}N/A{% endif %}
-                    </span>
-                    <span class="badge {{ latest_classifications.bmi.badge_class }}">
-                        {{ latest_classifications.bmi.status }}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Blood Pressure -->
-            <div class="health-metric-card">
-                <div class="health-metric-icon">
-                    <i class="bi bi-heart"></i>
-                </div>
-                <div class="health-metric-content">
-                    <span class="health-metric-label">Blood Pressure</span>
-                    <span class="health-metric-value">
-                        {% if latest_metrics.systolic_bp and latest_metrics.diastolic_bp %}
-                            {{ latest_metrics.systolic_bp }}/{{ latest_metrics.diastolic_bp }}
-                        {% else %}N/A{% endif %}
-                    </span>
-                    <span class="badge {{ latest_classifications.blood_pressure.badge_class }}">
-                        {{ latest_classifications.blood_pressure.status }}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- HbA1c -->
-            <div class="health-metric-card">
-                <div class="health-metric-icon">
-                    <i class="bi bi-droplet"></i>
-                </div>
-                <div class="health-metric-content">
-                    <span class="health-metric-label">HbA1c</span>
-                    <span class="health-metric-value">
-                        {% if latest_metrics.hba1c %}{{ latest_metrics.hba1c }}%{% else %}N/A{% endif %}
-                    </span>
-                    <span class="badge {{ latest_classifications.hba1c.badge_class }}">
-                        {{ latest_classifications.hba1c.status }}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- LDL -->
-            <div class="health-metric-card">
-                <div class="health-metric-icon">
-                    <i class="bi bi-droplet-half"></i>
-                </div>
-                <div class="health-metric-content">
-                    <span class="health-metric-label">LDL</span>
-                    <span class="health-metric-value">
-                        {% if latest_metrics.ldl %}{{ latest_metrics.ldl }} mg/dL{% else %}N/A{% endif %}
-                    </span>
-                    <span class="badge {{ latest_classifications.ldl.badge_class }}">
-                        {{ latest_classifications.ldl.status }}
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="text-sm text-muted mt-4">
-            <i class="bi bi-calendar3"></i>
-            Last updated: {{ latest_mcu_date.strftime('%B %d, %Y') if latest_mcu_date else 'N/A' }}
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Two Column Layout -->
-<div class="dashboard-grid-modern">
-    <!-- Status Overview -->
+<!-- Main Content Grid -->
+<div class="content-grid">
+    <!-- Recent Records -->
     <div class="card">
         <div class="card-header">
-            <div class="card-header-title">
-                <i class="bi bi-pie-chart"></i>
-                <span>Status Overview</span>
-            </div>
+            <span class="card-title">Recent Records</span>
+            <a href="{{ url_for('records.list') }}" class="btn btn-ghost btn-sm">View all</a>
         </div>
-        <div class="card-body">
-            <div class="status-overview-list">
-                <div class="status-overview-item">
-                    <span class="badge badge-warning">
-                        <i class="bi bi-hourglass-split"></i> Pending
-                    </span>
-                    <span class="status-count">{{ pending_count }}</span>
-                </div>
-                <div class="status-overview-item">
-                    <span class="badge badge-success">
-                        <i class="bi bi-check-circle"></i> Cleared
-                    </span>
-                    <span class="status-count">{{ cleared_count }}</span>
-                </div>
-                <div class="status-overview-item">
-                    <span class="badge badge-danger">
-                        <i class="bi bi-x-circle"></i> Not Cleared
-                    </span>
-                    <span class="status-count">{{ not_cleared_count }}</span>
-                </div>
-                <div class="status-overview-item">
-                    <span class="badge badge-info">
-                        <i class="bi bi-exclamation-circle"></i> Follow Up
-                    </span>
-                    <span class="status-count">{{ follow_up_count }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Health Metrics -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-header-title">
-                <i class="bi bi-clipboard2-pulse"></i>
-                <span>Health Data Coverage</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="status-overview-list">
-                <div class="status-overview-item">
-                    <span class="badge badge-primary">
-                        <i class="bi bi-check"></i> With Metrics
-                    </span>
-                    <span class="status-count">{{ records_with_metrics }}</span>
-                </div>
-                <div class="status-overview-item">
-                    <span class="badge badge-neutral">
-                        <i class="bi bi-dash"></i> Without Metrics
-                    </span>
-                    <span class="status-count">{{ records_without_metrics }}</span>
-                </div>
-            </div>
-            <div class="mt-4">
-                <div class="flex justify-between text-sm mb-2">
-                    <span class="text-muted">Coverage</span>
-                    <span class="font-medium">{{ (records_with_metrics / total_records * 100)|round(1) if total_records > 0 else 0 }}%</span>
-                </div>
-                <div class="progress">
-                    <div class="progress-bar" style="width: {{ (records_with_metrics / total_records * 100)|round(1) if total_records > 0 else 0 }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Records Table -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-header-title">
-            <i class="bi bi-clock-history"></i>
-            <span>Recent Records</span>
-        </div>
-        <a href="{{ url_for('records.list') }}" class="btn btn-sm btn-outline-secondary">
-            View All <i class="bi bi-arrow-right"></i>
-        </a>
-    </div>
-    <div class="card-body p-0">
-        {% if recent_records %}
-        <div class="data-table-container" style="border: none;">
+        <div class="card-body" style="padding: 0;">
+            {% if recent_records %}
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Patient</th>
-                        <th>Company</th>
-                        <th>MCU Date</th>
+                        <th>Date</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for record in recent_records %}
-                    <tr onclick="window.location='{{ url_for('records.detail', record_id=record.id) }}'" style="cursor: pointer;">
+                    <tr>
                         <td>
-                            <div class="flex items-center gap-3">
-                                <div class="patient-avatar">{{ record.patient_name[0]|upper }}</div>
-                                <span class="font-medium">{{ record.patient_name }}</span>
-                            </div>
+                            <strong>{{ record.patient_name }}</strong>
+                            <div style="color: var(--text-tertiary); font-size: 12px;">{{ record.company or 'No company' }}</div>
                         </td>
-                        <td class="text-muted">{{ record.company or '-' }}</td>
-                        <td class="text-muted">{{ record.mcu_date.strftime('%B %d, %Y') if record.mcu_date else '-' }}</td>
+                        <td>{{ record.mcu_date.strftime('%b %d, %Y') if record.mcu_date else 'N/A' }}</td>
                         <td>
-                            <span class="badge {{ record.status_badge_class }}">
-                                {{ record.status|title }}
+                            <span class="badge badge-{{ 'success' if record.status == 'Cleared' else 'warning' if record.status == 'Pending' else 'danger' }}">
+                                {{ record.status }}
                             </span>
                         </td>
                         <td>
-                            <a href="{{ url_for('records.detail', record_id=record.id) }}" class="btn btn-sm btn-ghost">
-                                <i class="bi bi-eye"></i>
-                            </a>
+                            <a href="{{ url_for('records.detail', record_id=record.id) }}" class="btn btn-ghost btn-sm">View</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <i class="bi bi-folder2-open"></i>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="bi bi-folder2-open"></i></div>
+                <div class="empty-state-title">No records yet</div>
+                <div class="empty-state-text">Create your first medical check-up record</div>
+                <a href="{{ url_for('records.create') }}" class="btn btn-primary">Create record</a>
             </div>
-            <h6 class="empty-state-title">No Records Yet</h6>
-            <p class="empty-state-description">Start by creating your first MCU record to track health data.</p>
-            <a href="{{ url_for('records.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create First Record
-            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div>
+        <h2 class="section-title">Quick actions</h2>
+        <div class="card">
+            <div class="card-body" style="padding: var(--space-3);">
+                <a href="{{ url_for('records.create') }}" class="nav-item" style="border-radius: var(--radius-md);">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>New record</span>
+                </a>
+                <a href="{{ url_for('ocr.index') }}" class="nav-item" style="border-radius: var(--radius-md);">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                    <span>Import from OCR</span>
+                </a>
+                <a href="{{ url_for('analytics.health_dashboard') }}" class="nav-item" style="border-radius: var(--radius-md);">
+                    <i class="bi bi-graph-up"></i>
+                    <span>View analytics</span>
+                </a>
+            </div>
+        </div>
+        
+        {% if latest_metrics %}
+        <h2 class="section-title" style="margin-top: var(--space-6);">Latest Metrics</h2>
+        <div class="card">
+            <div class="card-body" style="padding: 0;">
+                {% if latest_metrics.bmi %}
+                <div class="metric-row" style="padding-left: var(--space-5); padding-right: var(--space-5);">
+                    <span class="metric-name">BMI</span>
+                    <span class="metric-value">{{ latest_metrics.bmi }}</span>
+                </div>
+                {% endif %}
+                {% if latest_metrics.systolic_bp and latest_metrics.diastolic_bp %}
+                <div class="metric-row" style="padding-left: var(--space-5); padding-right: var(--space-5);">
+                    <span class="metric-name">Blood Pressure</span>
+                    <span class="metric-value">{{ latest_metrics.systolic_bp }}/{{ latest_metrics.diastolic_bp }}</span>
+                </div>
+                {% endif %}
+                {% if latest_metrics.heart_rate %}
+                <div class="metric-row" style="padding-left: var(--space-5); padding-right: var(--space-5);">
+                    <span class="metric-name">Heart Rate</span>
+                    <span class="metric-value">{{ latest_metrics.heart_rate }} bpm</span>
+                </div>
+                {% endif %}
+                {% if latest_metrics.fasting_blood_glucose %}
+                <div class="metric-row" style="padding-left: var(--space-5); padding-right: var(--space-5);">
+                    <span class="metric-name">Blood Glucose</span>
+                    <span class="metric-value">{{ latest_metrics.fasting_blood_glucose }} mg/dL</span>
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
     </div>
 </div>
-
-<!-- User Profile Card -->
-<div class="user-profile-card">
-    <div class="user-profile-avatar">
-        {{ current_user.username[0]|upper }}
-    </div>
-    <div class="user-profile-info">
-        <h5 class="user-profile-name">{{ current_user.username }}</h5>
-        <p class="user-profile-email">{{ current_user.email }}</p>
-        <span class="user-profile-badge">
-            <i class="bi bi-calendar3"></i>
-            Member since {{ member_since.strftime('%B %Y') if member_since else 'N/A' }}
-        </span>
-    </div>
-</div>
-
-<style>
-    /* Dashboard specific styles */
-    .dashboard-grid-modern {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-5);
-        margin-bottom: var(--space-6);
-    }
-    
-    .health-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--space-4);
-    }
-    
-    .health-metric-card {
-        background: var(--bg-secondary);
-        border-radius: var(--radius-lg);
-        padding: var(--space-4);
-        display: flex;
-        align-items: flex-start;
-        gap: var(--space-3);
-    }
-    
-    .health-metric-icon {
-        width: 40px;
-        height: 40px;
-        background: var(--primary-100);
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary-600);
-        flex-shrink: 0;
-    }
-    
-    .health-metric-content {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-1);
-    }
-    
-    .health-metric-label {
-        font-size: var(--font-size-xs);
-        color: var(--text-tertiary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    .health-metric-value {
-        font-size: var(--font-size-lg);
-        font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
-    }
-    
-    .status-overview-list {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-3);
-    }
-    
-    .status-overview-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: var(--space-3);
-        background: var(--bg-secondary);
-        border-radius: var(--radius-md);
-    }
-    
-    .status-count {
-        font-size: var(--font-size-xl);
-        font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
-    }
-    
-    .patient-avatar {
-        width: 32px;
-        height: 32px;
-        background: var(--primary-100);
-        color: var(--primary-700);
-        border-radius: var(--radius-full);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-semibold);
-    }
-    
-    .user-profile-card {
-        display: flex;
-        align-items: center;
-        gap: var(--space-4);
-        padding: var(--space-5);
-        background: var(--bg-primary);
-        border: 1px solid var(--border-default);
-        border-radius: var(--radius-xl);
-        margin-top: var(--space-6);
-    }
-    
-    .user-profile-avatar {
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
-        color: white;
-        border-radius: var(--radius-full);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: var(--font-size-xl);
-        font-weight: var(--font-weight-bold);
-    }
-    
-    .user-profile-info {
-        flex: 1;
-    }
-    
-    .user-profile-name {
-        font-size: var(--font-size-lg);
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-primary);
-        margin-bottom: var(--space-1);
-    }
-    
-    .user-profile-email {
-        font-size: var(--font-size-sm);
-        color: var(--text-secondary);
-        margin-bottom: var(--space-2);
-    }
-    
-    .user-profile-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-1);
-        font-size: var(--font-size-xs);
-        color: var(--text-tertiary);
-    }
-    
-    .mb-6 { margin-bottom: var(--space-6); }
-    
-    @media (max-width: 992px) {
-        .health-metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
-        .dashboard-grid-modern {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .health-metrics-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 {% endblock %}

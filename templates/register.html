@@ -1,52 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Register - MCU Vault{% endblock %}
+{% block title %}Create account - MCU Vault{% endblock %}
 
 {% block auth_content %}
-<div class="auth-form-modern">
-    <div class="auth-form-header">
-        <h2><i class="bi bi-shield-check" style="font-size: 3rem; color: var(--primary-600);"></i></h2>
-        <h2>Create Account</h2>
-        <p>Register to start managing your medical records</p>
+<div class="auth-card">
+    <div class="auth-header">
+        <div class="auth-logo">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-subtitle">Start managing your health records</p>
     </div>
     
-    <form method="POST" action="{{ url_for('auth.register') }}">
+    <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="auth-form-group">
-            <label for="username" class="auth-form-label">
-                <i class="bi bi-person"></i> Username
-            </label>
+        
+        <div class="form-group">
+            <label for="username" class="form-label">Username</label>
             <input type="text" 
-                   class="auth-form-input" 
+                   class="form-input" 
                    id="username" 
                    name="username" 
                    placeholder="Choose a username"
                    value="{{ username or '' }}"
                    minlength="3"
                    maxlength="80"
-                   required 
-                   autofocus>
+                   required autofocus>
         </div>
         
-        <div class="auth-form-group">
-            <label for="email" class="auth-form-label">
-                <i class="bi bi-envelope"></i> Email Address
-            </label>
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
             <input type="email" 
-                   class="auth-form-input" 
+                   class="form-input" 
                    id="email" 
                    name="email" 
-                   placeholder="Enter your email address"
+                   placeholder="Enter your email"
                    value="{{ email or '' }}"
                    required>
         </div>
         
-        <div class="auth-form-group">
-            <label for="password" class="auth-form-label">
-                <i class="bi bi-lock"></i> Password
-            </label>
+        <div class="form-group">
+            <label for="password" class="form-label">Password</label>
             <input type="password" 
-                   class="auth-form-input" 
+                   class="form-input" 
                    id="password" 
                    name="password" 
                    placeholder="Create a password"
@@ -54,12 +50,10 @@
                    required>
         </div>
         
-        <div class="auth-form-group">
-            <label for="confirm_password" class="auth-form-label">
-                <i class="bi bi-lock-fill"></i> Confirm Password
-            </label>
+        <div class="form-group">
+            <label for="confirm_password" class="form-label">Confirm password</label>
             <input type="password" 
-                   class="auth-form-input" 
+                   class="form-input" 
                    id="confirm_password" 
                    name="confirm_password" 
                    placeholder="Confirm your password"
@@ -67,13 +61,13 @@
                    required>
         </div>
         
-        <button type="submit" class="auth-submit-btn">
-            <i class="bi bi-person-plus"></i> Create Account
+        <button type="submit" class="btn btn-primary btn-lg auth-submit">
+            Create account
         </button>
     </form>
     
-    <div class="auth-form-footer">
-        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    <div class="auth-footer">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
     </div>
 </div>
 {% endblock %}
